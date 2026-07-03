@@ -1,8 +1,10 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    ActivationPolicy, Manager, RunEvent, WebviewWindow,
+    Manager, RunEvent, WebviewWindow,
 };
+#[cfg(target_os = "macos")]
+use tauri::ActivationPolicy;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -77,6 +79,8 @@ fn sync_macos_presence(app: &tauri::AppHandle) {
             let _ = app.set_dock_visibility(false);
         }
     }
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
 }
 
 fn position_today_widget(window: &WebviewWindow) {
@@ -274,6 +278,7 @@ pub fn run() {
     }
 
     app.run(|app_handle, event| {
+        #[cfg(target_os = "macos")]
         if let RunEvent::Reopen { has_visible_windows, .. } = event {
             if !has_visible_windows {
                 open_main_window(app_handle);

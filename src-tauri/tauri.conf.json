@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "QueDesk",
+  "version": "0.1.0",
+  "identifier": "com.carlozuffi.quedesk",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "QueDesk",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 800,
+        "minHeight": 500,
+        "visible": false,
+        "center": true
+      },
+      {
+        "label": "today-widget",
+        "title": "Today — QueDesk",
+        "width": 360,
+        "height": 480,
+        "minWidth": 280,
+        "minHeight": 200,
+        "visible": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": true
+      },
+      {
+        "label": "quick-capture",
+        "title": "Quick Capture",
+        "width": 520,
+        "height": 108,
+        "visible": false,
+        "alwaysOnTop": true,
+        "decorations": false,
+        "resizable": false,
+        "center": true,
+        "skipTaskbar": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "sql": {
+      "preload": ["sqlite:quedesk.db"]
+    }
+  }
+}

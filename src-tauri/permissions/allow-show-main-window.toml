@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-show-main-window"
+description = "Allow widget windows to open the main QueDesk window"
+commands.allow = ["show_main_window"]

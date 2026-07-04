@@ -227,7 +227,7 @@ function AppContent() {
         setDropTargetTab(null);
       }}
     >
-      <div className="flex h-full flex-col bg-[var(--color-surface)]">
+      <div className="flex h-full min-h-0 flex-col bg-[var(--color-surface)]">
         <Header />
 
         {!focusMode && (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
+import { WEB_APP_VERSION } from "../lib/appVersion";
 import { SearchBar } from "./SearchBar";
 
 export function Header() {
@@ -19,6 +20,14 @@ export function Header() {
             aria-hidden
           >
             Q
+          </div>
+          <div className="sm:hidden">
+            <h1 className="text-sm font-semibold leading-tight tracking-tight">
+              QueDesk
+            </h1>
+            <p className="text-[10px] font-medium text-[var(--color-accent)]">
+              {WEB_APP_VERSION}
+            </p>
           </div>
           <div className="hidden sm:block">
             <h1 className="text-sm font-semibold leading-tight tracking-tight">

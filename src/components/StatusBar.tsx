@@ -6,13 +6,17 @@ interface StatusBarProps {
 }
 
 export function StatusBar({ dbReady, dbError }: StatusBarProps) {
+  const statusLabel = dbError ? "Error" : dbReady ? "Ready" : "Connecting…";
+
   return (
-    <footer className="flex items-center justify-between border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 pb-[max(0.375rem,env(safe-area-inset-bottom))] pt-1.5 text-[10px] tracking-wide text-[var(--color-text-muted)] sm:px-5">
-      <span>QueDesk {WEB_APP_VERSION}</span>
+    <footer className="flex shrink-0 items-center justify-between border-t-2 border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] text-xs text-[var(--color-text-muted)] sm:px-5 sm:py-1.5 sm:text-[10px] sm:pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <span className="font-medium text-[var(--color-text)]">
+        QueDesk {WEB_APP_VERSION}
+      </span>
       <span className="flex items-center gap-1.5">
         <span
           className={[
-            "inline-block h-1.5 w-1.5 rounded-full",
+            "inline-block h-2 w-2 rounded-full sm:h-1.5 sm:w-1.5",
             dbError
               ? "bg-[var(--color-danger)]"
               : dbReady
@@ -21,7 +25,7 @@ export function StatusBar({ dbReady, dbError }: StatusBarProps) {
           ].join(" ")}
           aria-hidden
         />
-        {dbError ? "Error" : dbReady ? "Ready" : "Connecting…"}
+        {statusLabel}
       </span>
     </footer>
   );

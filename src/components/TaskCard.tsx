@@ -2,8 +2,10 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/taskTree";
+import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
+import { OverflowMenu } from "./OverflowMenu";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
 interface TaskCardProps {
@@ -93,6 +95,12 @@ export function TaskCard({
     );
   }
 
+  const cardOverflowItems = buildTaskOverflowItems(
+    task,
+    { onMove, onClear, onDelete, onUnpin },
+    { isSurface: false },
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -129,15 +137,20 @@ export function TaskCard({
           >
             ▸
           </span>
-          <span>
+          <span className="hidden sm:inline">
             Subtasks
             {hasSubtasks ? ` ${progress.done}/${progress.total}` : ""}
+          </span>
+          <span className="sm:hidden">
+            {hasSubtasks ? `${progress.done}/${progress.total}` : ""}
           </span>
         </button>
 
         <div className="min-w-0 flex-1">
           <TaskItem
             embedded
+            hideOverflowMenu
+            hideTouchActions
             task={task}
             isSelected={isSelected}
             showQueueBadge={showQueueBadge}
@@ -151,6 +164,17 @@ export function TaskCard({
             onMove={onMove}
             onClearDueDate={onClearDueDate}
           />
+        </div>
+
+        <div className="pointer-fine:hidden flex shrink-0 items-center gap-1">
+          <OverflowMenu items={cardOverflowItems} />
+          <button
+            type="button"
+            onClick={() => onEdit(task)}
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-xs font-medium text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
+          >
+            Edit
+          </button>
         </div>
       </div>
 

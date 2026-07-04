@@ -3,9 +3,10 @@ import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoveToMenu, MOVE_QUEUES } from "./MoveToMenu";
-import { OverflowMenu, type OverflowMenuItem } from "./OverflowMenu";
+import { MoveToMenu } from "./MoveToMenu";
+import { OverflowMenu } from "./OverflowMenu";
 import { formatDueDate, isOverdue } from "../lib/data";
+import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { openSourceLink } from "../lib/sourceLink";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
@@ -35,6 +36,8 @@ interface TaskItemProps {
   onUnpin?: (surfaceId: string) => void;
   onClearDueDate?: (id: string) => void;
   dragHandleProps?: DragHandleProps;
+  hideOverflowMenu?: boolean;
+  hideTouchActions?: boolean;
 }
 
 export function TaskItem({
@@ -55,6 +58,8 @@ export function TaskItem({
   onUnpin,
   onClearDueDate,
   dragHandleProps,
+  hideOverflowMenu = false,
+  hideTouchActions = false,
 }: TaskItemProps) {
   const isCleared = task.status === "cleared";
 
@@ -78,33 +83,11 @@ export function TaskItem({
   const completed = task.status === "completed";
   const overdue = isOverdue(task);
 
-  const mobileMenuItems: OverflowMenuItem[] = [];
-  if (!isCleared) {
-    for (const queue of MOVE_QUEUES) {
-      mobileMenuItems.push({
-        label: `Move to ${queue.label}`,
-        disabled: queue.id === task.queue,
-        onClick: () => onMove(task.id, queue.id),
-      });
-    }
-  }
-  if (!isCleared && completed && !isSurface) {
-    mobileMenuItems.push({
-      label: "Clear to archive",
-      onClick: () => onClear(task.id),
-    });
-  }
-  if (isSurface && onUnpin) {
-    mobileMenuItems.push({
-      label: "Unpin",
-      onClick: () => onUnpin(task.id),
-    });
-  }
-  mobileMenuItems.push({
-    label: "Delete",
-    danger: true,
-    onClick: () => onDelete(task.id),
-  });
+  const mobileMenuItems = buildTaskOverflowItems(
+    task,
+    { onMove, onClear, onDelete, onUnpin },
+    { isSurface },
+  );
 
   const content = (
     <>
@@ -238,12 +221,26 @@ export function TaskItem({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5">
-        <div className="sm:hidden">
-          <OverflowMenu items={mobileMenuItems} />
-        </div>
+      <div className="flex shrink-0 items-center gap-1">
+        {!hideOverflowMenu && (
+          <div className="pointer-fine:hidden">
+            <OverflowMenu items={mobileMenuItems} />
+          </div>
+        )}
 
-        <div className="hidden items-center gap-0.5 sm:flex sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+        {!hideTouchActions && (
+          <div className="pointer-fine:hidden">
+            <button
+              type="button"
+              onClick={() => onEdit(task)}
+              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-xs font-medium text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
+            >
+              Edit
+            </button>
+          </div>
+        )}
+
+        <div className="hidden items-center gap-0.5 opacity-0 transition-opacity pointer-fine:flex pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100">
         {!isCleared && completed && !isSurface && (
           <button
             type="button"
@@ -287,14 +284,6 @@ export function TaskItem({
           Delete
         </button>
         </div>
-
-        <button
-          type="button"
-          onClick={() => onEdit(task)}
-          className="rounded-md px-2 py-1.5 text-xs text-[var(--color-accent)] transition-colors active:bg-[var(--color-accent-soft)] sm:hidden"
-        >
-          Edit
-        </button>
       </div>
     </>
   );

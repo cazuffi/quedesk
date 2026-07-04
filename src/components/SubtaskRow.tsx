@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { parentProgress } from "../lib/taskTree";
 import { formatDueDate, isOverdue } from "../lib/data";
+import { buildSubtaskOverflowItems } from "../lib/taskOverflowItems";
 import type { Task, TaskQueue } from "../types";
 import { PinToMenu } from "./PinToMenu";
 import { OverflowMenu } from "./OverflowMenu";
@@ -60,39 +61,28 @@ export function SubtaskRow({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
-        <div className="hidden sm:block sm:opacity-0 sm:transition-opacity sm:group-hover/sub:opacity-100">
+      <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-1">
+        <div className="pointer-fine:hidden">
+          <PinToMenu onPin={(queue) => onPin(subtask.id, queue)} />
+        </div>
+        <div className="pointer-fine:hidden">
+          <OverflowMenu
+            items={buildSubtaskOverflowItems(subtask.id, { onPin, onDelete })}
+          />
+        </div>
+        <div className="hidden items-center gap-1 opacity-0 transition-opacity pointer-fine:flex pointer-fine:group-hover/sub:opacity-100">
           <PinToMenu
             compact
             onPin={(queue) => onPin(subtask.id, queue)}
           />
+          <button
+            type="button"
+            onClick={() => onDelete(subtask.id)}
+            className="rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
+          >
+            Delete
+          </button>
         </div>
-        <div className="sm:hidden">
-          <OverflowMenu
-            items={[
-              {
-                label: "Pin to Today",
-                onClick: () => onPin(subtask.id, "today"),
-              },
-              {
-                label: "Pin to This Week",
-                onClick: () => onPin(subtask.id, "week"),
-              },
-              {
-                label: "Delete",
-                danger: true,
-                onClick: () => onDelete(subtask.id),
-              },
-            ]}
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => onDelete(subtask.id)}
-          className="hidden rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)] sm:block"
-        >
-          Delete
-        </button>
       </div>
     </div>
   );

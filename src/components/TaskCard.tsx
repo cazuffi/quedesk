@@ -5,7 +5,7 @@ import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/ta
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
-import { MobileActionBar } from "./MobileActionBar";
+import { OverflowMenu } from "./OverflowMenu";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
@@ -157,7 +157,6 @@ export function TaskCard({
         <TaskItem
           embedded
           hideOverflowMenu
-          hideTouchActions
           task={task}
           isSelected={isSelected}
           showQueueBadge={showQueueBadge}
@@ -171,20 +170,11 @@ export function TaskCard({
           onMove={onMove}
           onClearDueDate={onClearDueDate}
         />
-      </div>
 
-      {touchLayout ? (
-        <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2">
-          <MobileActionBar items={cardOverflowItems} />
-          <button
-            type="button"
-            onClick={() => onEdit(task)}
-            className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
-          >
-            Edit
-          </button>
-        </div>
-      ) : null}
+        {touchLayout ? (
+          <OverflowMenu items={cardOverflowItems} />
+        ) : null}
+      </div>
 
       {expanded && (
         <div className="ml-6">

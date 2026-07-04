@@ -4,7 +4,7 @@ import { formatDueDate, isOverdue } from "../lib/data";
 import { buildSubtaskOverflowItems } from "../lib/taskOverflowItems";
 import type { Task, TaskQueue } from "../types";
 import { PinToMenu } from "./PinToMenu";
-import { MobileActionBar } from "./MobileActionBar";
+import { OverflowMenu } from "./OverflowMenu";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 
 interface SubtaskRowProps {
@@ -63,29 +63,25 @@ export function SubtaskRow({
             </p>
           )}
         </div>
-      </div>
 
-      {touchLayout ? (
-        <div className="mt-2 border-t border-[var(--color-border)]/50 pt-2">
-          <MobileActionBar
+        {touchLayout ? (
+          <OverflowMenu
             label="Subtask actions"
             items={buildSubtaskOverflowItems(subtask.id, { onPin, onDelete })}
           />
-        </div>
-      ) : null}
-
-      {!touchLayout ? (
-        <div className="pointer-events-none hidden items-center gap-1 opacity-0 transition-opacity group-hover/sub:pointer-events-auto group-hover/sub:opacity-100 xl:flex">
-          <PinToMenu compact onPin={(queue) => onPin(subtask.id, queue)} />
-          <button
-            type="button"
-            onClick={() => onDelete(subtask.id)}
-            className="rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
-          >
-            Delete
-          </button>
-        </div>
-      ) : null}
+        ) : (
+          <div className="pointer-events-none hidden shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover/sub:pointer-events-auto group-hover/sub:opacity-100 xl:flex">
+            <PinToMenu compact onPin={(queue) => onPin(subtask.id, queue)} />
+            <button
+              type="button"
+              onClick={() => onDelete(subtask.id)}
+              className="rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

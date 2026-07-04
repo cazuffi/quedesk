@@ -4,7 +4,7 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MoveToMenu } from "./MoveToMenu";
-import { MobileActionBar } from "./MobileActionBar";
+import { OverflowMenu } from "./OverflowMenu";
 import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { openSourceLink } from "../lib/sourceLink";
@@ -38,7 +38,6 @@ interface TaskItemProps {
   onClearDueDate?: (id: string) => void;
   dragHandleProps?: DragHandleProps;
   hideOverflowMenu?: boolean;
-  hideTouchActions?: boolean;
 }
 
 export function TaskItem({
@@ -60,7 +59,6 @@ export function TaskItem({
   onClearDueDate,
   dragHandleProps,
   hideOverflowMenu = false,
-  hideTouchActions = false,
 }: TaskItemProps) {
   const touchLayout = useTouchLayout();
   const isCleared = task.status === "cleared";
@@ -269,30 +267,17 @@ export function TaskItem({
         </button>
       </div>
       ) : null}
+
+      {touchLayout && !hideOverflowMenu ? (
+        <OverflowMenu items={mobileMenuItems} />
+      ) : null}
     </>
   );
-
-  const mobileBar =
-    touchLayout && !hideOverflowMenu ? (
-      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2">
-        <MobileActionBar items={mobileMenuItems} />
-        {!hideTouchActions && (
-          <button
-            type="button"
-            onClick={() => onEdit(task)}
-            className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-    ) : null;
 
   if (embedded) {
     return (
       <div className="group min-w-0 flex-1">
         <div className="flex items-start gap-2">{mainRow}</div>
-        {mobileBar}
       </div>
     );
   }
@@ -312,7 +297,6 @@ export function TaskItem({
       ].join(" ")}
     >
       <div className="flex items-start gap-2">{mainRow}</div>
-      {mobileBar}
     </div>
   );
 }

@@ -1,18 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useConfirm } from "../contexts/ConfirmContext";
-import { useTasks } from "../contexts/TasksContext";
 import { resolveParentTitle } from "../lib/taskTree";
 import { formatDueDate, isOverdue } from "../lib/data";
-import {
-  buildSubtaskOverflowItems,
-  buildTaskOverflowItems,
-} from "../lib/taskOverflowItems";
-import { useTouchLayout } from "../hooks/useTouchLayout";
 import type { PanelLayout } from "../contexts/UiContext";
 import type { Task, TaskQueue } from "../types";
 import { queueTabLabel } from "../types";
 import { MarkdownNotes } from "./MarkdownNotes";
-import { MobileActionBar } from "./MobileActionBar";
 import { MoveToMenu } from "./MoveToMenu";
 
 interface TaskDetailPanelProps {
@@ -49,8 +42,6 @@ export function TaskDetailPanel({
   onMove,
   onDelete,
 }: TaskDetailPanelProps) {
-  const touchLayout = useTouchLayout();
-  const { pinSubtaskToQueue, unpinFromQueue, clearOne } = useTasks();
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes);
   const [dueDate, setDueDate] = useState(task.dueDate ?? "");
@@ -62,37 +53,8 @@ export function TaskDetailPanel({
 
   const parentTitle = resolveParentTitle(allTasks, task);
   const isSurface = task.surfaceOfId !== null;
-  const isSubtask = task.parentId !== null && !isSurface;
   const completed = task.status === "completed";
   const overdue = isOverdue(task);
-
-  const quickActionItems = isSubtask
-    ? buildSubtaskOverflowItems(task.id, {
-        onPin: (id, queue) => {
-          void pinSubtaskToQueue(id, queue);
-        },
-        onDelete: (id) => {
-          void onDelete(id);
-        },
-      })
-    : buildTaskOverflowItems(
-        task,
-        {
-          onMove,
-          onClear: (id) => {
-            void clearOne(id);
-          },
-          onDelete: (id) => {
-            void onDelete(id);
-          },
-          onUnpin: isSurface
-            ? (id) => {
-                void unpinFromQueue(id);
-              }
-            : undefined,
-        },
-        { isSurface },
-      );
 
   useEffect(() => {
     setTitle(task.title);
@@ -202,13 +164,6 @@ export function TaskDetailPanel({
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-5">
-          {touchLayout ? (
-            <MobileActionBar
-              label={isSubtask ? "Subtask actions" : "Quick actions"}
-              items={quickActionItems}
-            />
-          ) : null}
-
           <div className="flex items-start gap-3">
             {task.status !== "cleared" && (
               <input

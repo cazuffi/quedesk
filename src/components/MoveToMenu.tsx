@@ -8,6 +8,8 @@ const MOVE_QUEUES: { id: TaskQueue; label: string }[] = [
   { id: "backlog", label: "Backlog" },
 ];
 
+export { MOVE_QUEUES };
+
 interface MoveToMenuProps {
   currentQueue: TaskQueue;
   onMove: (queue: TaskQueue) => void;

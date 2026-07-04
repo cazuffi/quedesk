@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { CaptureSettingsPanel } from "./CaptureSettingsPanel";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
+import { isWeb } from "../lib/platform";
 import { WEB_APP_VERSION } from "../lib/appVersion";
 import { SearchBar } from "./SearchBar";
 
@@ -10,6 +12,8 @@ export function Header() {
   const { searchQuery, setSearchQuery } = useTasks();
   const { focusMode, toggleFocusMode } = useUi();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const web = isWeb();
 
   return (
     <header className="border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
@@ -68,6 +72,15 @@ export function Header() {
             >
               {resolved === "dark" ? "☀ Light" : "☾ Dark"}
             </button>
+            {web && (
+              <button
+                type="button"
+                onClick={() => setCaptureOpen(true)}
+                className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+              >
+                Quick capture
+              </button>
+            )}
           </div>
 
           {/* Mobile menu toggle */}
@@ -107,12 +120,28 @@ export function Header() {
                   >
                     {resolved === "dark" ? "☀ Light mode" : "☾ Dark mode"}
                   </button>
+                  {web && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCaptureOpen(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+                    >
+                      Quick capture
+                    </button>
+                  )}
                 </div>
               </>
             )}
           </div>
         </div>
       </div>
+
+      {captureOpen && web && (
+        <CaptureSettingsPanel onClose={() => setCaptureOpen(false)} />
+      )}
     </header>
   );
 }

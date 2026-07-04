@@ -288,25 +288,25 @@ function AppContent() {
               )}
             </div>
           )}
-
-          {panelLayout === "full" && selectedTask && (
-            <TaskDetailPanel
-              task={selectedTask}
-              allTasks={tasks}
-              layout="full"
-              onClose={closePanel}
-              onExpand={expandPanel}
-              onCollapse={collapsePanel}
-              onSave={editTask}
-              onToggle={toggleComplete}
-              onMove={moveTaskToQueue}
-              onDelete={handleDeleteFromPanel}
-            />
-          )}
         </main>
 
         <StatusBar dbReady={dbReady} dbError={dbError} />
       </div>
+
+      {panelLayout === "full" && selectedTask && (
+        <TaskDetailPanel
+          task={selectedTask}
+          allTasks={tasks}
+          layout="full"
+          onClose={closePanel}
+          onExpand={expandPanel}
+          onCollapse={collapsePanel}
+          onSave={editTask}
+          onToggle={toggleComplete}
+          onMove={moveTaskToQueue}
+          onDelete={handleDeleteFromPanel}
+        />
+      )}
 
       <DragOverlay adjustScale={false} dropAnimation={null}>
         {draggingTask ? <TaskDragPreview task={draggingTask} /> : null}

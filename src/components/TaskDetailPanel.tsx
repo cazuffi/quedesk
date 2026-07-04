@@ -170,7 +170,7 @@ export function TaskDetailPanel({
                 type="checkbox"
                 checked={completed}
                 onChange={() => onToggle(task)}
-                className="mt-2.5 h-4 w-4 cursor-pointer accent-[var(--color-accent)]"
+                className="mt-2.5 h-5 w-5 shrink-0 cursor-pointer accent-[var(--color-accent)] outline-none sm:mt-2.5 sm:h-4 sm:w-4"
               />
             )}
             <label className="min-w-0 flex-1 text-sm">

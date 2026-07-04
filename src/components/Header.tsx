@@ -9,7 +9,7 @@ export function Header() {
   const { focusMode, toggleFocusMode } = useUi();
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5 py-3">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
       <div className="flex items-center gap-3">
         <div
           className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)] text-sm font-bold tracking-tight text-white shadow-sm"

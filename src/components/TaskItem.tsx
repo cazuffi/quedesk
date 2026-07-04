@@ -8,6 +8,7 @@ import { MobileActionBar } from "./MobileActionBar";
 import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { openSourceLink } from "../lib/sourceLink";
+import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
 interface DragHandleProps {
@@ -61,6 +62,7 @@ export function TaskItem({
   hideOverflowMenu = false,
   hideTouchActions = false,
 }: TaskItemProps) {
+  const touchLayout = useTouchLayout();
   const isCleared = task.status === "cleared";
 
   const sortable = useSortable({
@@ -221,7 +223,8 @@ export function TaskItem({
         )}
       </div>
 
-      <div className="pointer-events-none hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity lg:flex lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100">
+      {!touchLayout ? (
+        <div className="pointer-events-none hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 xl:flex">
         {!isCleared && completed && !isSurface && (
           <button
             type="button"
@@ -265,12 +268,13 @@ export function TaskItem({
           Delete
         </button>
       </div>
+      ) : null}
     </>
   );
 
   const mobileBar =
-    !hideOverflowMenu ? (
-      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
+    touchLayout && !hideOverflowMenu ? (
+      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2">
         <MobileActionBar items={mobileMenuItems} />
         {!hideTouchActions && (
           <button

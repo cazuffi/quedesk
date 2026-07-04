@@ -1,11 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/taskTree";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
 import { MobileActionBar } from "./MobileActionBar";
+import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
 interface TaskCardProps {
@@ -47,10 +48,17 @@ export function TaskCard({
   onUnpin,
   onClearDueDate,
 }: TaskCardProps) {
+  const touchLayout = useTouchLayout();
   const isSurface = task.surfaceOfId !== null;
   const progress = parentProgress(subtasks);
   const hasSubtasks = subtasks.length > 0;
   const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1279px)").matches) {
+      setExpanded(true);
+    }
+  }, []);
 
   const {
     attributes,
@@ -165,16 +173,18 @@ export function TaskCard({
         />
       </div>
 
-      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
-        <MobileActionBar items={cardOverflowItems} />
-        <button
-          type="button"
-          onClick={() => onEdit(task)}
-          className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
-        >
-          Edit
-        </button>
-      </div>
+      {touchLayout ? (
+        <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2">
+          <MobileActionBar items={cardOverflowItems} />
+          <button
+            type="button"
+            onClick={() => onEdit(task)}
+            className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
+          >
+            Edit
+          </button>
+        </div>
+      ) : null}
 
       {expanded && (
         <div className="ml-6">

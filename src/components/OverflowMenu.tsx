@@ -39,12 +39,12 @@ export function OverflowMenu({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex h-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-xs font-semibold tracking-wider text-[var(--color-text)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)] active:text-[var(--color-accent)]"
+        className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-text)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)] active:text-[var(--color-accent)]"
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
       >
-        ···
+        More
       </button>
 
       {open && (

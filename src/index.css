@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
-@custom-variant pointer-fine (@media (hover: hover) and (pointer: fine));
 
 @theme {
   --font-sans: "Inter", "SF Pro Display", "Segoe UI", system-ui, -apple-system,

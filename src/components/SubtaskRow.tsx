@@ -62,15 +62,15 @@ export function SubtaskRow({
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-1">
-        <div className="pointer-fine:hidden">
+        <div className="lg:hidden">
           <PinToMenu onPin={(queue) => onPin(subtask.id, queue)} />
         </div>
-        <div className="pointer-fine:hidden">
+        <div className="flex gap-2 lg:hidden">
           <OverflowMenu
             items={buildSubtaskOverflowItems(subtask.id, { onPin, onDelete })}
           />
         </div>
-        <div className="hidden items-center gap-1 opacity-0 transition-opacity pointer-fine:flex pointer-fine:group-hover/sub:opacity-100">
+        <div className="hidden items-center gap-1 opacity-0 transition-opacity lg:flex lg:group-hover/sub:opacity-100">
           <PinToMenu
             compact
             onPin={(queue) => onPin(subtask.id, queue)}

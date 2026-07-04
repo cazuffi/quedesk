@@ -89,7 +89,7 @@ export function TaskItem({
     { isSurface },
   );
 
-  const content = (
+  const mainRow = (
     <>
       {!isCleared && !embedded && !dragHandleProps && (
         <button
@@ -221,26 +221,7 @@ export function TaskItem({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
-        {!hideOverflowMenu && (
-          <div className="pointer-fine:hidden">
-            <OverflowMenu items={mobileMenuItems} />
-          </div>
-        )}
-
-        {!hideTouchActions && (
-          <div className="pointer-fine:hidden">
-            <button
-              type="button"
-              onClick={() => onEdit(task)}
-              className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 text-xs font-medium text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
-            >
-              Edit
-            </button>
-          </div>
-        )}
-
-        <div className="hidden items-center gap-0.5 opacity-0 transition-opacity pointer-fine:flex pointer-fine:group-hover:opacity-100 pointer-fine:group-focus-within:opacity-100">
+      <div className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity lg:flex lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
         {!isCleared && completed && !isSurface && (
           <button
             type="button"
@@ -283,13 +264,33 @@ export function TaskItem({
         >
           Delete
         </button>
-        </div>
       </div>
     </>
   );
 
+  const mobileBar =
+    !hideOverflowMenu ? (
+      <div className="mt-2 flex justify-end gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
+        <OverflowMenu items={mobileMenuItems} />
+        {!hideTouchActions && (
+          <button
+            type="button"
+            onClick={() => onEdit(task)}
+            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
+          >
+            Edit
+          </button>
+        )}
+      </div>
+    ) : null;
+
   if (embedded) {
-    return <div className="group flex items-start gap-2">{content}</div>;
+    return (
+      <div className="group min-w-0 flex-1">
+        <div className="flex items-start gap-2">{mainRow}</div>
+        {mobileBar}
+      </div>
+    );
   }
 
   return (
@@ -297,7 +298,7 @@ export function TaskItem({
       ref={drag.setNodeRef}
       style={drag.style}
       className={[
-        "group flex items-start gap-2 rounded-xl border bg-[var(--color-surface-raised)] px-3.5 py-2.5 transition-shadow hover:shadow-sm",
+        "group flex flex-col rounded-xl border bg-[var(--color-surface-raised)] px-3.5 py-2.5 transition-shadow hover:shadow-sm",
         isSurface ? "border-l-2 border-l-[var(--color-accent)]" : "",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
@@ -306,7 +307,8 @@ export function TaskItem({
             : "border-[var(--color-border)]",
       ].join(" ")}
     >
-      {content}
+      <div className="flex items-start gap-2">{mainRow}</div>
+      {mobileBar}
     </div>
   );
 }

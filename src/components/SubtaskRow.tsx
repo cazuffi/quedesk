@@ -4,7 +4,7 @@ import { formatDueDate, isOverdue } from "../lib/data";
 import { buildSubtaskOverflowItems } from "../lib/taskOverflowItems";
 import type { Task, TaskQueue } from "../types";
 import { PinToMenu } from "./PinToMenu";
-import { OverflowMenu } from "./OverflowMenu";
+import { MobileActionBar } from "./MobileActionBar";
 
 interface SubtaskRowProps {
   subtask: Task;
@@ -25,64 +25,59 @@ export function SubtaskRow({
   const overdue = isOverdue(subtask);
 
   return (
-    <div className="group/sub flex items-start gap-2 rounded-lg bg-[var(--color-surface)] px-2.5 py-2 transition-colors hover:bg-[var(--color-surface)]/80">
-      <input
-        type="checkbox"
-        checked={completed}
-        onChange={() => onToggle(subtask)}
-        className="mt-0.5 h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)]"
-        aria-label={
-          completed ? "Mark subtask incomplete" : "Mark subtask complete"
-        }
-      />
+    <div className="group/sub rounded-lg bg-[var(--color-surface)] px-2.5 py-2 transition-colors">
+      <div className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          checked={completed}
+          onChange={() => onToggle(subtask)}
+          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded accent-[var(--color-accent)]"
+          aria-label={
+            completed ? "Mark subtask incomplete" : "Mark subtask complete"
+          }
+        />
 
-      <div className="min-w-0 flex-1">
-        <button
-          type="button"
-          onClick={() => onEdit(subtask)}
-          className={[
-            "text-left text-xs leading-snug transition-colors hover:text-[var(--color-accent)]",
-            completed
-              ? "line-through text-[var(--color-text-muted)]"
-              : "font-medium",
-          ].join(" ")}
-        >
-          {subtask.title}
-        </button>
-        {subtask.dueDate && (
-          <p
-            className={[
-              "mt-0.5 text-[10px] text-[var(--color-text-muted)]",
-              overdue ? "font-medium text-[var(--color-danger)]" : "",
-            ].join(" ")}
-          >
-            {formatDueDate(subtask.dueDate)}
-          </p>
-        )}
-      </div>
-
-      <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center sm:gap-1">
-        <div className="lg:hidden">
-          <PinToMenu onPin={(queue) => onPin(subtask.id, queue)} />
-        </div>
-        <div className="flex gap-2 lg:hidden">
-          <OverflowMenu
-            items={buildSubtaskOverflowItems(subtask.id, { onPin, onDelete })}
-          />
-        </div>
-        <div className="hidden items-center gap-1 opacity-0 transition-opacity lg:flex lg:group-hover/sub:opacity-100">
-          <PinToMenu
-            compact
-            onPin={(queue) => onPin(subtask.id, queue)}
-          />
+        <div className="min-w-0 flex-1">
           <button
             type="button"
-            onClick={() => onDelete(subtask.id)}
-            className="rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
+            onClick={() => onEdit(subtask)}
+            className={[
+              "text-left text-sm leading-snug transition-colors active:text-[var(--color-accent)]",
+              completed
+                ? "line-through text-[var(--color-text-muted)]"
+                : "font-medium",
+            ].join(" ")}
           >
-            Delete
+            {subtask.title}
           </button>
+          {subtask.dueDate && (
+            <p
+              className={[
+                "mt-0.5 text-[10px] text-[var(--color-text-muted)]",
+                overdue ? "font-medium text-[var(--color-danger)]" : "",
+              ].join(" ")}
+            >
+              {formatDueDate(subtask.dueDate)}
+            </p>
+          )}
         </div>
+      </div>
+
+      <div className="mt-2 border-t border-[var(--color-border)]/50 pt-2 lg:hidden">
+        <MobileActionBar
+          items={buildSubtaskOverflowItems(subtask.id, { onPin, onDelete })}
+        />
+      </div>
+
+      <div className="pointer-events-none hidden items-center gap-1 opacity-0 transition-opacity lg:flex lg:group-hover/sub:pointer-events-auto lg:group-hover/sub:opacity-100">
+        <PinToMenu compact onPin={(queue) => onPin(subtask.id, queue)} />
+        <button
+          type="button"
+          onClick={() => onDelete(subtask.id)}
+          className="rounded-md px-1.5 py-0.5 text-[10px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );

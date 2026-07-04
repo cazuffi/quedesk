@@ -4,7 +4,7 @@ import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MoveToMenu } from "./MoveToMenu";
-import { OverflowMenu } from "./OverflowMenu";
+import { MobileActionBar } from "./MobileActionBar";
 import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { openSourceLink } from "../lib/sourceLink";
@@ -221,7 +221,7 @@ export function TaskItem({
         )}
       </div>
 
-      <div className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity lg:flex lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+      <div className="pointer-events-none hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity lg:flex lg:group-hover:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:pointer-events-auto lg:group-focus-within:opacity-100">
         {!isCleared && completed && !isSurface && (
           <button
             type="button"
@@ -270,13 +270,13 @@ export function TaskItem({
 
   const mobileBar =
     !hideOverflowMenu ? (
-      <div className="mt-2 flex justify-end gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
-        <OverflowMenu items={mobileMenuItems} />
+      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
+        <MobileActionBar items={mobileMenuItems} />
         {!hideTouchActions && (
           <button
             type="button"
             onClick={() => onEdit(task)}
-            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
+            className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
           >
             Edit
           </button>

@@ -5,7 +5,7 @@ import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/ta
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
-import { OverflowMenu } from "./OverflowMenu";
+import { MobileActionBar } from "./MobileActionBar";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
 interface TaskCardProps {
@@ -165,12 +165,12 @@ export function TaskCard({
         />
       </div>
 
-      <div className="mt-2 flex justify-end gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
-        <OverflowMenu items={cardOverflowItems} />
+      <div className="mt-2 flex flex-col gap-2 border-t border-[var(--color-border)]/60 pt-2 lg:hidden">
+        <MobileActionBar items={cardOverflowItems} />
         <button
           type="button"
           onClick={() => onEdit(task)}
-          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent-soft)]"
+          className="self-end rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-accent)] shadow-sm transition-colors active:bg-[var(--color-accent)] active:text-white"
         >
           Edit
         </button>

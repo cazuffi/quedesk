@@ -31,6 +31,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
   const [focusMode, setFocusMode] = useState(false);
   const [hideCompleted, setHideCompleted] = useState(true);
 
+  const isMobile = () => window.innerWidth < 640;
+
   const selectTask = useCallback((task: Task | null) => {
     if (!task) {
       setSelectedTaskId(null);
@@ -38,7 +40,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       return;
     }
     setSelectedTaskId(task.id);
-    setPanelLayout("side");
+    setPanelLayout(isMobile() ? "full" : "side");
   }, []);
 
   const closePanel = useCallback(() => {
@@ -51,7 +53,12 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const collapsePanel = useCallback(() => {
-    setPanelLayout("side");
+    if (isMobile()) {
+      setSelectedTaskId(null);
+      setPanelLayout("closed");
+    } else {
+      setPanelLayout("side");
+    }
   }, []);
 
   const toggleFocusMode = useCallback(() => {

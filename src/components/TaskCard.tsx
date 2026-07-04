@@ -98,7 +98,7 @@ export function TaskCard({
       ref={setNodeRef}
       style={style}
       className={[
-        "group rounded-xl border bg-[var(--color-surface-raised)] px-3.5 py-2.5 transition-shadow hover:shadow-sm",
+        "group rounded-xl border bg-[var(--color-surface-raised)] px-3 py-3 transition-shadow sm:px-3.5 sm:py-2.5 sm:hover:shadow-sm",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
           : "border-[var(--color-border)]",
@@ -107,7 +107,7 @@ export function TaskCard({
       <div className="flex items-start gap-2">
         <button
           type="button"
-          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
+          className="mt-0.5 hidden cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing sm:block"
           aria-label="Drag to reorder or drop on a tab"
           {...attributes}
           {...listeners}

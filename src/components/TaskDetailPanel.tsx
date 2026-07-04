@@ -105,12 +105,21 @@ export function TaskDetailPanel({
   const shellClass =
     layout === "full"
       ? "fixed inset-0 z-40 flex flex-col bg-[var(--color-surface)]"
-      : "flex h-full w-full max-w-md shrink-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-surface-raised)]";
+      : "hidden sm:flex h-full w-full max-w-md shrink-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-surface-raised)]";
 
   return (
     <aside className={shellClass} aria-label="Task details">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-5 py-3">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5 sm:pt-3">
         <div className="min-w-0">
+          {layout === "full" && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="mb-1 flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] transition-colors active:opacity-70 sm:hidden"
+            >
+              ‹ Back
+            </button>
+          )}
           <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
             Task details
           </p>
@@ -120,20 +129,21 @@ export function TaskDetailPanel({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {layout === "side" ? (
+          {layout === "side" && (
             <button
               type="button"
               onClick={onExpand}
-              className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+              className="hidden rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] sm:block"
               title="Expand to full view"
             >
               Expand
             </button>
-          ) : (
+          )}
+          {layout === "full" && (
             <button
               type="button"
               onClick={onCollapse}
-              className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+              className="hidden rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] sm:block"
               title="Back to side panel"
             >
               Side panel
@@ -142,7 +152,7 @@ export function TaskDetailPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+            className="hidden rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] sm:block"
           >
             Close
           </button>
@@ -153,7 +163,7 @@ export function TaskDetailPanel({
         onSubmit={handleSubmit}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-5">
           <div className="flex items-start gap-3">
             {task.status !== "cleared" && (
               <input
@@ -261,7 +271,7 @@ export function TaskDetailPanel({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:pb-3">
           <button
             type="button"
             onClick={async () => {

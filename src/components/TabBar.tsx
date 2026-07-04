@@ -31,7 +31,7 @@ function TabButton({
       type="button"
       onClick={onSelect}
       className={[
-        "relative shrink-0 px-3.5 py-2.5 text-xs font-medium tracking-wide transition-all",
+        "relative shrink-0 px-3.5 py-3 text-sm font-medium tracking-wide transition-all sm:py-2.5 sm:text-xs",
         isActive
           ? "text-[var(--color-accent)]"
           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]",
@@ -62,7 +62,7 @@ export function TabBar({
 }: TabBarProps) {
   return (
     <nav
-      className="flex gap-0.5 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5"
+      className="flex gap-0.5 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 sm:px-5"
       aria-label="Queues"
     >
       {QUEUE_TABS.map((tab) => (

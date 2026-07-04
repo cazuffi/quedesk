@@ -82,7 +82,7 @@ export function TaskItem({
       {!isCleared && !embedded && !dragHandleProps && (
         <button
           type="button"
-          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
+          className="mt-0.5 hidden cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing sm:block"
           aria-label="Drag to reorder or drop on a tab"
           {...drag.attributes}
           {...drag.listeners}
@@ -96,7 +96,7 @@ export function TaskItem({
           type="checkbox"
           checked={completed}
           onChange={() => onToggle(task)}
-          className="mt-1 h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)]"
+          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)] sm:mt-1 sm:h-3.5 sm:w-3.5"
           aria-label={completed ? "Mark incomplete" : "Mark complete"}
         />
       ) : null}
@@ -120,7 +120,7 @@ export function TaskItem({
             type="button"
             onClick={() => onEdit(task)}
             className={[
-              "text-left text-sm leading-snug transition-colors hover:text-[var(--color-accent)]",
+              "text-left text-base leading-snug transition-colors active:text-[var(--color-accent)] sm:text-sm sm:hover:text-[var(--color-accent)]",
               completed
                 ? "line-through text-[var(--color-text-muted)]"
                 : "font-medium",
@@ -161,7 +161,7 @@ export function TaskItem({
                       e.stopPropagation();
                       onClearDueDate(task.id);
                     }}
-                    className="ml-0.5 rounded-full p-0.5 text-[9px] opacity-0 transition-opacity hover:bg-[var(--color-surface)] group-hover:opacity-60 group-hover:hover:opacity-100"
+                    className="ml-0.5 rounded-full p-0.5 text-[9px] opacity-60 transition-opacity active:opacity-100 sm:opacity-0 sm:group-hover:opacity-60 sm:group-hover:hover:opacity-100"
                     title="Clear due date"
                   >
                     ✕
@@ -209,12 +209,12 @@ export function TaskItem({
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="flex shrink-0 items-center gap-0.5 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
         {!isCleared && completed && !isSurface && (
           <button
             type="button"
             onClick={() => onClear(task.id)}
-            className="rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+            className="hidden rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] sm:block"
           >
             Clear
           </button>
@@ -224,23 +224,25 @@ export function TaskItem({
           <button
             type="button"
             onClick={() => onUnpin(task.id)}
-            className="rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+            className="hidden rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] sm:block"
           >
             Unpin
           </button>
         )}
 
         {!isCleared && (
-          <MoveToMenu
-            currentQueue={task.queue}
-            onMove={(queue) => onMove(task.id, queue)}
-          />
+          <span className="hidden sm:block">
+            <MoveToMenu
+              currentQueue={task.queue}
+              onMove={(queue) => onMove(task.id, queue)}
+            />
+          </span>
         )}
 
         <button
           type="button"
           onClick={() => onEdit(task)}
-          className="rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+          className="rounded-md px-2 py-1.5 text-xs text-[var(--color-accent)] transition-colors active:bg-[var(--color-accent-soft)] sm:px-2 sm:py-1 sm:text-[11px] sm:text-[var(--color-text-muted)] sm:hover:bg-[var(--color-surface)] sm:hover:text-[var(--color-text)]"
         >
           Edit
         </button>
@@ -248,7 +250,7 @@ export function TaskItem({
         <button
           type="button"
           onClick={() => onDelete(task.id)}
-          className="rounded-md px-2 py-1 text-[11px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
+          className="hidden rounded-md px-2 py-1 text-[11px] text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)] sm:block"
         >
           Delete
         </button>

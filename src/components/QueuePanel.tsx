@@ -107,8 +107,8 @@ export function QueuePanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 py-4">
-        <h2 className="text-base font-semibold tracking-tight">
+      <div className="px-4 py-3 sm:px-5 sm:py-4">
+        <h2 className="text-lg font-semibold tracking-tight sm:text-base">
           {isSearchActive ? "Search results" : tab.label}
         </h2>
         <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
@@ -118,7 +118,7 @@ export function QueuePanel({
         </p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-5 pb-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-5 sm:px-5">
         <NextSubtaskPrompt />
 
         {!isSearchActive && tab.id !== "archive" && (

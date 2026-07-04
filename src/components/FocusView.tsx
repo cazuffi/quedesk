@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
+import { NextSubtaskPrompt } from "./NextSubtaskPrompt";
 import { TaskList } from "./TaskList";
 
 export function FocusView() {
@@ -14,8 +15,10 @@ export function FocusView() {
     removeTask,
     moveTaskToQueue,
     addSubtask,
-    promoteSubtaskToQueue,
-    unpromoteSurface,
+    addSubtasksBatch,
+    editTask,
+    pinSubtaskToQueue,
+    unpinFromQueue,
   } = useTasks();
   const { hideCompleted, toggleHideCompleted, toggleFocusMode, selectTask } =
     useUi();
@@ -27,6 +30,10 @@ export function FocusView() {
     return items.filter((t) => t.status !== "completed");
   }, [tasksForTab, hideCompleted]);
 
+  async function handleClearDueDate(id: string) {
+    await editTask(id, { dueDate: null });
+  }
+
   async function handleDelete(id: string) {
     const ok = await confirm("Delete this task?", {
       confirmLabel: "Delete",
@@ -37,10 +44,12 @@ export function FocusView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-4">
         <div>
-          <h2 className="text-lg font-semibold">Focus — Today</h2>
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <h2 className="text-base font-semibold tracking-tight">
+            Focus — Today
+          </h2>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
             {todayTasks.length} task{todayTasks.length === 1 ? "" : "s"} in view
           </p>
         </div>
@@ -48,21 +57,25 @@ export function FocusView() {
           <button
             type="button"
             onClick={toggleHideCompleted}
-            className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs hover:border-[var(--color-accent)]"
+            className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
           >
             {hideCompleted ? "Show completed" : "Hide completed"}
           </button>
           <button
             type="button"
             onClick={toggleFocusMode}
-            className="rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-accent-hover)]"
+            className="rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md"
           >
             Exit focus
           </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto p-4">
+      <div className="min-h-0 flex-1 overflow-auto px-5 py-4">
+        <div className="mb-3">
+          <NextSubtaskPrompt />
+        </div>
+
         <TaskList
           tasks={todayTasks}
           allTasks={tasks}
@@ -74,8 +87,10 @@ export function FocusView() {
           onDelete={handleDelete}
           onMove={moveTaskToQueue}
           onAddSubtask={addSubtask}
-          onPromote={promoteSubtaskToQueue}
-          onUnpromote={unpromoteSurface}
+          onAddSubtasksBatch={addSubtasksBatch}
+          onPin={pinSubtaskToQueue}
+          onUnpin={unpinFromQueue}
+          onClearDueDate={handleClearDueDate}
           subtasksFor={subtasksFor}
         />
       </div>

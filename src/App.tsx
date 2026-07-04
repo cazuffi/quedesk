@@ -9,13 +9,14 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FocusView } from "./components/FocusView";
 import { Header } from "./components/Header";
 import { QueuePanel } from "./components/QueuePanel";
 import { StatusBar } from "./components/StatusBar";
 import { TabBar } from "./components/TabBar";
 import { TaskDetailPanel } from "./components/TaskDetailPanel";
+import { TaskDragPreview } from "./components/TaskDragPreview";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { TasksProvider, useTasks } from "./contexts/TasksContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -25,7 +26,8 @@ import {
   queueAwareCollisionDetection,
   queueFromDragEvent,
 } from "./lib/dnd";
-import { checkDatabaseHealth } from "./lib/db";
+import { isDesktop } from "./lib/platform";
+import { todayDateString } from "./lib/dueDateQueue";
 import {
   parseTaskDragId,
   QUEUE_TABS,
@@ -81,18 +83,27 @@ function AppContent() {
   useEffect(() => {
     let cancelled = false;
 
-    checkDatabaseHealth()
-      .then((ok) => {
+    (async () => {
+      if (isDesktop()) {
+        const { checkDatabaseHealth } = await import("./lib/db");
+        const ok = await checkDatabaseHealth();
         if (!cancelled) {
           setDbReady(ok);
           if (!ok) setDbError("Schema not initialized");
         }
-      })
-      .catch((error: unknown) => {
+      } else {
+        const { checkDatabaseHealth } = await import("./lib/tasks-supabase");
+        const ok = await checkDatabaseHealth();
         if (!cancelled) {
-          setDbError(error instanceof Error ? error.message : "Unknown error");
+          setDbReady(ok);
+          if (!ok) setDbError("Could not connect to backend");
         }
-      });
+      }
+    })().catch((error: unknown) => {
+      if (!cancelled) {
+        setDbError(error instanceof Error ? error.message : "Unknown error");
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -142,6 +153,9 @@ function AppContent() {
         if (task.queue !== targetQueue) {
           await moveTaskToQueue(taskId, targetQueue as TaskQueue);
         }
+        if (targetQueue === "today" && !task.surfaceOfId) {
+          await editTask(taskId, { dueDate: todayDateString() });
+        }
         handleTabChange(targetQueue);
       } catch (error) {
         console.error("Failed to move task:", error);
@@ -178,6 +192,24 @@ function AppContent() {
     handleTabChange(queue);
   }
 
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (panelLayout !== "side") return;
+
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(e.target as Node)
+      ) {
+        closePanel();
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [panelLayout, closePanel]);
+
   async function handleDeleteFromPanel(id: string) {
     await removeTask(id);
     closePanel();
@@ -213,18 +245,20 @@ function AppContent() {
                 <FocusView />
               </div>
               {panelLayout === "side" && selectedTask && (
-                <TaskDetailPanel
-                  task={selectedTask}
-                  allTasks={tasks}
-                  layout="side"
-                  onClose={closePanel}
-                  onExpand={expandPanel}
-                  onCollapse={collapsePanel}
-                  onSave={editTask}
-                  onToggle={toggleComplete}
-                  onMove={moveTaskToQueue}
-                  onDelete={handleDeleteFromPanel}
-                />
+                <div ref={panelRef} className="flex h-full shrink-0">
+                  <TaskDetailPanel
+                    task={selectedTask}
+                    allTasks={tasks}
+                    layout="side"
+                    onClose={closePanel}
+                    onExpand={expandPanel}
+                    onCollapse={collapsePanel}
+                    onSave={editTask}
+                    onToggle={toggleComplete}
+                    onMove={moveTaskToQueue}
+                    onDelete={handleDeleteFromPanel}
+                  />
+                </div>
               )}
             </div>
           ) : (
@@ -237,18 +271,20 @@ function AppContent() {
                 />
               </div>
               {panelLayout === "side" && selectedTask && (
-                <TaskDetailPanel
-                  task={selectedTask}
-                  allTasks={tasks}
-                  layout="side"
-                  onClose={closePanel}
-                  onExpand={expandPanel}
-                  onCollapse={collapsePanel}
-                  onSave={editTask}
-                  onToggle={toggleComplete}
-                  onMove={moveTaskToQueue}
-                  onDelete={handleDeleteFromPanel}
-                />
+                <div ref={panelRef} className="flex h-full shrink-0">
+                  <TaskDetailPanel
+                    task={selectedTask}
+                    allTasks={tasks}
+                    layout="side"
+                    onClose={closePanel}
+                    onExpand={expandPanel}
+                    onCollapse={collapsePanel}
+                    onSave={editTask}
+                    onToggle={toggleComplete}
+                    onMove={moveTaskToQueue}
+                    onDelete={handleDeleteFromPanel}
+                  />
+                </div>
               )}
             </div>
           )}
@@ -272,12 +308,8 @@ function AppContent() {
         <StatusBar dbReady={dbReady} dbError={dbError} />
       </div>
 
-      <DragOverlay>
-        {draggingTask ? (
-          <div className="rounded-lg border border-[var(--color-accent)] bg-[var(--color-surface-raised)] px-4 py-3 text-sm font-medium shadow-lg">
-            {draggingTask.title}
-          </div>
-        ) : null}
+      <DragOverlay adjustScale={false} dropAnimation={null}>
+        {draggingTask ? <TaskDragPreview task={draggingTask} /> : null}
       </DragOverlay>
     </DndContext>
   );

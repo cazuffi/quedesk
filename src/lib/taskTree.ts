@@ -45,3 +45,24 @@ export function resolveParentTitle(
   if (!subtask?.parentId) return null;
   return allTasks.find((t) => t.id === subtask.parentId)?.title ?? null;
 }
+
+export function resolveParentTask(
+  allTasks: Task[],
+  surface: Task,
+): Task | null {
+  if (!surface.surfaceOfId) return null;
+  const subtask = allTasks.find((t) => t.id === surface.surfaceOfId);
+  if (!subtask?.parentId) return null;
+  return allTasks.find((t) => t.id === subtask.parentId) ?? null;
+}
+
+export function siblingProgressFor(
+  allTasks: Task[],
+  pinnedTask: Task,
+): { done: number; total: number } | null {
+  if (!pinnedTask.surfaceOfId) return null;
+  const subtask = allTasks.find((t) => t.id === pinnedTask.surfaceOfId);
+  if (!subtask?.parentId) return null;
+  const siblings = getSubtasks(allTasks, subtask.parentId);
+  return parentProgress(siblings);
+}

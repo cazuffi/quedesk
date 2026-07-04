@@ -35,7 +35,7 @@ export function MoveToMenu({ currentQueue, onMove }: MoveToMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="rounded px-2 py-1 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+        className="rounded-md px-2 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
         aria-haspopup="menu"
         aria-expanded={open}
       >
@@ -45,7 +45,7 @@ export function MoveToMenu({ currentQueue, onMove }: MoveToMenuProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-20 mt-1 min-w-[8.5rem] rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-1 shadow-lg"
+          className="absolute right-0 top-full z-20 mt-1.5 min-w-[9rem] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] py-1 shadow-lg"
         >
           {MOVE_QUEUES.map((queue) => (
             <button
@@ -58,14 +58,16 @@ export function MoveToMenu({ currentQueue, onMove }: MoveToMenuProps) {
                 setOpen(false);
               }}
               className={[
-                "block w-full px-3 py-1.5 text-left text-xs",
+                "flex w-full items-center justify-between px-3 py-1.5 text-xs transition-colors",
                 queue.id === currentQueue
                   ? "font-medium text-[var(--color-accent)]"
                   : "text-[var(--color-text)] hover:bg-[var(--color-surface)]",
               ].join(" ")}
             >
               {queue.label}
-              {queue.id === currentQueue ? " ✓" : ""}
+              {queue.id === currentQueue && (
+                <span className="text-[var(--color-accent)]">✓</span>
+              )}
             </button>
           ))}
         </div>

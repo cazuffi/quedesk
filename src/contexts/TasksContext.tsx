@@ -17,20 +17,29 @@ import {
   createTask,
   deleteTask,
   fetchAllTasks,
+  getNextIncompleteSibling,
   moveTask,
   nextSortOrder,
-  promoteSubtask,
+  pinSubtask,
   purgeArchive,
   reorderTasks,
   searchTasks,
   toggleTaskComplete,
-  unpromoteSubtask,
+  unpinSubtask,
   updateTask,
   type CreateTaskInput,
   type UpdateTaskInput,
-} from "../lib/tasks";
+} from "../lib/data";
 import { listenForTasksChanged, notifyTasksChanged } from "../lib/tasksEvents";
 import type { QueueTab, Task, TaskQueue } from "../types";
+
+export interface NextSiblingPrompt {
+  completedTask: Task;
+  nextSibling: Task | null;
+  parent: Task | null;
+  progress: { done: number; total: number };
+  queue: TaskQueue;
+}
 
 interface TasksContextValue {
   tasks: Task[];
@@ -41,6 +50,7 @@ interface TasksContextValue {
   refresh: () => Promise<void>;
   addTask: (input: CreateTaskInput) => Promise<void>;
   addSubtask: (parentId: string, title: string) => Promise<void>;
+  addSubtasksBatch: (parentId: string, titles: string[]) => Promise<Task[]>;
   editTask: (id: string, input: UpdateTaskInput) => Promise<void>;
   toggleComplete: (task: Task) => Promise<void>;
   clearOne: (id: string) => Promise<void>;
@@ -49,13 +59,13 @@ interface TasksContextValue {
   purgeAllArchive: () => Promise<void>;
   moveTaskToQueue: (taskId: string, queue: TaskQueue) => Promise<void>;
   reorderInQueue: (queue: TaskQueue, orderedIds: string[]) => Promise<void>;
-  promoteSubtaskToQueue: (
-    subtaskId: string,
-    queue: TaskQueue,
-  ) => Promise<void>;
-  unpromoteSurface: (surfaceId: string) => Promise<void>;
+  pinSubtaskToQueue: (subtaskId: string, queue: TaskQueue) => Promise<void>;
+  unpinFromQueue: (surfaceId: string) => Promise<void>;
   tasksForTab: (tab: QueueTab) => Task[];
   subtasksFor: (parentId: string) => Task[];
+  nextSiblingPrompt: NextSiblingPrompt | null;
+  dismissNextSiblingPrompt: () => void;
+  completeParentFromPrompt: () => Promise<void>;
 }
 
 const TasksContext = createContext<TasksContextValue | null>(null);
@@ -65,6 +75,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Task[]>([]);
+  const [nextSiblingPrompt, setNextSiblingPrompt] =
+    useState<NextSiblingPrompt | null>(null);
 
   const refresh = useCallback(async () => {
     const all = await fetchAllTasks();
@@ -171,6 +183,22 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     [refreshAndNotify],
   );
 
+  const addSubtasksBatch = useCallback(
+    async (parentId: string, titles: string[]): Promise<Task[]> => {
+      const created: Task[] = [];
+      for (const title of titles) {
+        const trimmed = title.trim();
+        if (trimmed) {
+          const task = await createSubtask(parentId, trimmed);
+          created.push(task);
+        }
+      }
+      await refreshAndNotify();
+      return created;
+    },
+    [refreshAndNotify],
+  );
+
   const editTask = useCallback(
     async (id: string, input: UpdateTaskInput) => {
       await updateTask(id, input);
@@ -181,8 +209,26 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
   const toggleComplete = useCallback(
     async (task: Task) => {
+      const wasActive = task.status === "active";
       await toggleTaskComplete(task);
       await refreshAndNotify();
+
+      if (wasActive && (task.surfaceOfId || task.parentId)) {
+        try {
+          const result = await getNextIncompleteSibling(task.id);
+          if (result.next || result.progress.done === result.progress.total) {
+            setNextSiblingPrompt({
+              completedTask: task,
+              nextSibling: result.next,
+              parent: result.parent,
+              progress: result.progress,
+              queue: task.queue,
+            });
+          }
+        } catch {
+          // Silently ignore — prompt is a nice-to-have
+        }
+      }
     },
     [refreshAndNotify],
   );
@@ -238,21 +284,36 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     [refreshAndNotify],
   );
 
-  const promoteSubtaskToQueue = useCallback(
+  const pinSubtaskToQueue = useCallback(
     async (subtaskId: string, queue: TaskQueue) => {
-      await promoteSubtask(subtaskId, queue);
+      await pinSubtask(subtaskId, queue);
       await refreshAndNotify();
     },
     [refreshAndNotify],
   );
 
-  const unpromoteSurface = useCallback(
+  const unpinFromQueue = useCallback(
     async (surfaceId: string) => {
-      await unpromoteSubtask(surfaceId);
+      await unpinSubtask(surfaceId);
       await refreshAndNotify();
     },
     [refreshAndNotify],
   );
+
+  const dismissNextSiblingPrompt = useCallback(() => {
+    setNextSiblingPrompt(null);
+  }, []);
+
+  const completeParentFromPrompt = useCallback(async () => {
+    const prompt = nextSiblingPrompt;
+    if (!prompt?.parent) return;
+    const parentTask = tasks.find((t) => t.id === prompt.parent!.id);
+    if (parentTask) {
+      await toggleTaskComplete(parentTask);
+      await refreshAndNotify();
+    }
+    setNextSiblingPrompt(null);
+  }, [nextSiblingPrompt, tasks, refreshAndNotify]);
 
   const value = useMemo(
     () => ({
@@ -264,6 +325,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       refresh,
       addTask,
       addSubtask,
+      addSubtasksBatch,
       editTask,
       toggleComplete,
       clearOne,
@@ -272,10 +334,13 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       purgeAllArchive,
       moveTaskToQueue,
       reorderInQueue,
-      promoteSubtaskToQueue,
-      unpromoteSurface,
+      pinSubtaskToQueue,
+      unpinFromQueue,
       tasksForTab,
       subtasksFor,
+      nextSiblingPrompt,
+      dismissNextSiblingPrompt,
+      completeParentFromPrompt,
     }),
     [
       tasks,
@@ -285,6 +350,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       refresh,
       addTask,
       addSubtask,
+      addSubtasksBatch,
       editTask,
       toggleComplete,
       clearOne,
@@ -293,10 +359,13 @@ export function TasksProvider({ children }: { children: ReactNode }) {
       purgeAllArchive,
       moveTaskToQueue,
       reorderInQueue,
-      promoteSubtaskToQueue,
-      unpromoteSurface,
+      pinSubtaskToQueue,
+      unpinFromQueue,
       tasksForTab,
       subtasksFor,
+      nextSiblingPrompt,
+      dismissNextSiblingPrompt,
+      completeParentFromPrompt,
     ],
   );
 

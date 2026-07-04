@@ -19,8 +19,10 @@ interface TaskListProps {
   onDelete: (id: string) => void;
   onMove: (id: string, queue: TaskQueue) => void;
   onAddSubtask: (parentId: string, title: string) => Promise<void>;
-  onPromote: (subtaskId: string, queue: TaskQueue) => void;
-  onUnpromote?: (surfaceId: string) => void;
+  onAddSubtasksBatch?: (parentId: string, titles: string[]) => Promise<Task[]>;
+  onPin: (subtaskId: string, queue: TaskQueue) => void;
+  onUnpin?: (surfaceId: string) => void;
+  onClearDueDate?: (id: string) => void;
   subtasksFor: (parentId: string) => Task[];
 }
 
@@ -37,13 +39,15 @@ export function TaskList({
   onDelete,
   onMove,
   onAddSubtask,
-  onPromote,
-  onUnpromote,
+  onAddSubtasksBatch,
+  onPin,
+  onUnpin,
+  onClearDueDate,
   subtasksFor,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
+      <p className="py-10 text-center text-sm text-[var(--color-text-muted)]">
         {emptyMessage}
       </p>
     );
@@ -55,11 +59,12 @@ export function TaskList({
 
   return (
     <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-      <ul className="space-y-2">
+      <ul className="space-y-1.5">
         {tasks.map((task) => (
           <li key={task.id}>
             <TaskCard
               task={task}
+              allTasks={allTasks}
               subtasks={subtasksFor(task.id)}
               parentTitle={resolveParentTitle(allTasks, task)}
               isSelected={task.id === selectedTaskId}
@@ -71,8 +76,10 @@ export function TaskList({
               onDelete={onDelete}
               onMove={onMove}
               onAddSubtask={onAddSubtask}
-              onPromote={onPromote}
-              onUnpromote={onUnpromote}
+              onAddSubtasksBatch={onAddSubtasksBatch}
+              onPin={onPin}
+              onUnpin={onUnpin}
+              onClearDueDate={onClearDueDate}
             />
           </li>
         ))}

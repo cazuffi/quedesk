@@ -1,29 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import App from "./App";
-import { QuickCaptureApp } from "./QuickCaptureApp";
-import { TodayWidgetApp } from "./TodayWidgetApp";
+import { isDesktop } from "./lib/platform";
 
 type AppWindow = "main" | "today-widget" | "quick-capture";
 
 export function Root() {
   const [windowKind, setWindowKind] = useState<AppWindow | null>(null);
+  const [WidgetComponent, setWidgetComponent] = useState<ComponentType | null>(null);
+  const desktop = isDesktop();
 
   useEffect(() => {
+    if (!desktop) {
+      setWindowKind("main");
+      return;
+    }
+
     import("@tauri-apps/api/webviewWindow")
       .then(({ getCurrentWebviewWindow }) => {
         const label = getCurrentWebviewWindow().label;
-        if (label === "today-widget") setWindowKind("today-widget");
-        else if (label === "quick-capture") setWindowKind("quick-capture");
-        else setWindowKind("main");
+        if (label === "today-widget") {
+          import("./TodayWidgetApp").then((m) => {
+            setWidgetComponent(() => m.TodayWidgetApp);
+            setWindowKind("today-widget");
+          });
+        } else if (label === "quick-capture") {
+          import("./QuickCaptureApp").then((m) => {
+            setWidgetComponent(() => m.QuickCaptureApp);
+            setWindowKind("quick-capture");
+          });
+        } else {
+          setWindowKind("main");
+        }
       })
       .catch(() => setWindowKind("main"));
+  }, [desktop]);
+
+  if (!windowKind) return null;
+
+  if (desktop && WidgetComponent) return <WidgetComponent />;
+  if (desktop) return <App />;
+
+  return <WebRoot />;
+}
+
+function WebRoot() {
+  const [Gate, setGate] = useState<ComponentType<{ children: ReactNode }> | null>(null);
+
+  useEffect(() => {
+    import("./components/AuthGate").then((m) => setGate(() => m.AuthGate));
   }, []);
 
-  if (!windowKind) {
-    return null;
-  }
+  if (!Gate) return null;
 
-  if (windowKind === "today-widget") return <TodayWidgetApp />;
-  if (windowKind === "quick-capture") return <QuickCaptureApp />;
-  return <App />;
+  return (
+    <Gate>
+      <App />
+    </Gate>
+  );
 }

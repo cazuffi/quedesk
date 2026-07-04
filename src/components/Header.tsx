@@ -9,23 +9,25 @@ export function Header() {
   const { focusMode, toggleFocusMode } = useUi();
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5 py-3">
       <div className="flex items-center gap-3">
         <div
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent)] text-sm font-bold text-white"
+          className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-hover)] text-sm font-bold tracking-tight text-white shadow-sm"
           aria-hidden
         >
           Q
         </div>
         <div>
-          <h1 className="text-base font-semibold leading-tight">QueDesk</h1>
-          <p className="text-xs text-[var(--color-text-muted)]">
+          <h1 className="text-sm font-semibold leading-tight tracking-tight">
+            QueDesk
+          </h1>
+          <p className="text-[11px] text-[var(--color-text-muted)]">
             {focusMode ? "Focus mode" : "Personal productivity"}
           </p>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-wrap items-center justify-end gap-3">
+      <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
         {!focusMode && (
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         )}
@@ -33,21 +35,21 @@ export function Header() {
           type="button"
           onClick={toggleFocusMode}
           className={[
-            "rounded-lg border px-3 py-1.5 text-sm transition-colors",
+            "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
             focusMode
-              ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-              : "border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] hover:border-[var(--color-accent)]",
+              ? "bg-[var(--color-accent)] text-white shadow-sm hover:bg-[var(--color-accent-hover)]"
+              : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]",
           ].join(" ")}
         >
-          {focusMode ? "Focus on" : "Focus"}
+          {focusMode ? "Exit focus" : "Focus"}
         </button>
         <button
           type="button"
           onClick={toggle}
-          className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)]"
+          className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
           aria-label={`Switch to ${resolved === "dark" ? "light" : "dark"} mode`}
         >
-          {resolved === "dark" ? "Light" : "Dark"}
+          {resolved === "dark" ? "☀ Light" : "☾ Dark"}
         </button>
       </div>
     </header>

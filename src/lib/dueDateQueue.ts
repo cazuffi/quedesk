@@ -59,3 +59,20 @@ export function targetQueueForTask(task: Task): TaskQueue | null {
   if (!shouldAutoRoute(task)) return null;
   return queueForDueDate(task.dueDate);
 }
+
+export function isOverdue(task: Task): boolean {
+  if (!task.dueDate || task.status !== "active") return false;
+  return task.dueDate < todayDateString();
+}
+
+export function formatDueDate(dueDate: string): string {
+  const today = todayDateString();
+  if (dueDate === today) return "Today";
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (dueDate === toDateOnly(tomorrow)) return "Tomorrow";
+  return new Date(`${dueDate}T12:00:00`).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}

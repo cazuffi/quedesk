@@ -56,11 +56,11 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {request && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
           onClick={() => close(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-5 shadow-xl"
+            className="w-full max-w-sm rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -68,18 +68,18 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
           >
             <h3
               id="confirm-title"
-              className="text-base font-semibold text-[var(--color-text)]"
+              className="text-sm font-semibold tracking-tight text-[var(--color-text)]"
             >
               Confirm
             </h3>
-            <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
               {request.message}
             </p>
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => close(false)}
-                className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm hover:bg-[var(--color-surface)]"
+                className="rounded-xl bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
               >
                 Cancel
               </button>
@@ -88,9 +88,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                 autoFocus
                 onClick={() => close(true)}
                 className={[
-                  "rounded-lg px-4 py-2 text-sm font-medium text-white",
+                  "rounded-xl px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md",
                   request.danger
-                    ? "bg-red-600 hover:bg-red-700"
+                    ? "bg-[var(--color-danger)] hover:bg-red-600"
                     : "bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)]",
                 ].join(" ")}
               >

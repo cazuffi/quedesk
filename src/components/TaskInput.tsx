@@ -44,12 +44,12 @@ export function TaskInput({
         onChange={(e) => setTitle(e.target.value)}
         placeholder={placeholder}
         disabled={busy}
-        className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] disabled:opacity-60"
+        className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3.5 py-2 text-sm outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:bg-white disabled:opacity-60 dark:focus:bg-[var(--color-surface-raised)]"
       />
       <button
         type="submit"
         disabled={busy || !title.trim()}
-        className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+        className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md disabled:opacity-40 disabled:shadow-none"
       >
         Add
       </button>

@@ -69,7 +69,7 @@ function QuickCaptureContent() {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Quick capture to Inbox…"
           disabled={busy}
-          className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-2 text-sm outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60"
         />
         <button
           type="button"
@@ -83,10 +83,10 @@ function QuickCaptureContent() {
             });
           }}
           className={[
-            "shrink-0 rounded-lg border px-3 py-2 text-xs font-medium",
+            "shrink-0 rounded-xl border px-3 py-2 text-xs font-medium transition-all",
             showLink || sourceLink.trim()
-              ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-accent)]"
-              : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-text)]",
+              ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+              : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
           ].join(" ")}
           title="Add source link"
         >
@@ -95,7 +95,7 @@ function QuickCaptureContent() {
         <button
           type="submit"
           disabled={busy || !title.trim()}
-          className="shrink-0 rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+          className="shrink-0 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md disabled:opacity-40"
         >
           Add
         </button>
@@ -109,7 +109,7 @@ function QuickCaptureContent() {
           onChange={(e) => setSourceLink(e.target.value)}
           placeholder="Source link (optional) — Outlook or Teams URL"
           disabled={busy}
-          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-1.5 text-xs outline-none focus:border-[var(--color-accent)] disabled:opacity-60"
+          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-1.5 text-xs outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60"
         />
       )}
     </form>

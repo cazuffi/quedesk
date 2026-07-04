@@ -1,13 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
-import { parentProgress } from "../lib/taskTree";
+import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/taskTree";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
 import { taskDragId, type Task, type TaskQueue } from "../types";
 
 interface TaskCardProps {
   task: Task;
+  allTasks: Task[];
   subtasks: Task[];
   parentTitle?: string | null;
   isSelected?: boolean;
@@ -19,12 +20,15 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
   onMove: (id: string, queue: TaskQueue) => void;
   onAddSubtask: (parentId: string, title: string) => Promise<void>;
-  onPromote: (subtaskId: string, queue: TaskQueue) => void;
-  onUnpromote?: (surfaceId: string) => void;
+  onAddSubtasksBatch?: (parentId: string, titles: string[]) => Promise<Task[]>;
+  onPin: (subtaskId: string, queue: TaskQueue) => void;
+  onUnpin?: (surfaceId: string) => void;
+  onClearDueDate?: (id: string) => void;
 }
 
 export function TaskCard({
   task,
+  allTasks,
   subtasks,
   parentTitle,
   isSelected = false,
@@ -36,8 +40,10 @@ export function TaskCard({
   onDelete,
   onMove,
   onAddSubtask,
-  onPromote,
-  onUnpromote,
+  onAddSubtasksBatch,
+  onPin,
+  onUnpin,
+  onClearDueDate,
 }: TaskCardProps) {
   const isSurface = task.surfaceOfId !== null;
   const progress = parentProgress(subtasks);
@@ -59,14 +65,19 @@ export function TaskCard({
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.45 : 1,
+    opacity: isDragging ? 0 : 1,
   };
 
   if (isSurface || !allowSubtasks) {
+    const sibProgress = isSurface ? siblingProgressFor(allTasks, task) : null;
+    const parentTask = isSurface ? resolveParentTask(allTasks, task) : null;
+
     return (
       <TaskItem
         task={task}
         parentTitle={parentTitle}
+        parentTask={parentTask}
+        siblingProgress={sibProgress}
         showQueueBadge={showQueueBadge}
         isSurface={isSurface}
         isSelected={isSelected}
@@ -75,7 +86,8 @@ export function TaskCard({
         onClear={onClear}
         onDelete={onDelete}
         onMove={onMove}
-        onUnpromote={onUnpromote}
+        onUnpin={onUnpin}
+        onClearDueDate={onClearDueDate}
         dragHandleProps={{ attributes, listeners, setNodeRef, style, isDragging }}
       />
     );
@@ -86,17 +98,16 @@ export function TaskCard({
       ref={setNodeRef}
       style={style}
       className={[
-        "rounded-lg border bg-[var(--color-surface-raised)] p-3",
+        "group rounded-xl border bg-[var(--color-surface-raised)] px-3.5 py-2.5 transition-shadow hover:shadow-sm",
         isSelected
-          ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/25"
+          ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
           : "border-[var(--color-border)]",
-        isDragging ? "shadow-md" : "",
       ].join(" ")}
     >
       <div className="flex items-start gap-2">
         <button
           type="button"
-          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)] hover:text-[var(--color-text)] active:cursor-grabbing"
+          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
           aria-label="Drag to reorder or drop on a tab"
           {...attributes}
           {...listeners}
@@ -107,11 +118,17 @@ export function TaskCard({
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="mt-0.5 flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+          className="mt-0.5 flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
           aria-expanded={expanded}
           aria-label={expanded ? "Collapse subtasks" : "Expand subtasks"}
         >
-          <span aria-hidden>{expanded ? "▾" : "▸"}</span>
+          <span
+            className="inline-block transition-transform"
+            style={{ transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+            aria-hidden
+          >
+            ▸
+          </span>
           <span>
             Subtasks
             {hasSubtasks ? ` ${progress.done}/${progress.total}` : ""}
@@ -132,6 +149,7 @@ export function TaskCard({
             onClear={onClear}
             onDelete={onDelete}
             onMove={onMove}
+            onClearDueDate={onClearDueDate}
           />
         </div>
       </div>
@@ -142,10 +160,11 @@ export function TaskCard({
             parentId={task.id}
             subtasks={subtasks}
             onAddSubtask={onAddSubtask}
+            onAddSubtasksBatch={onAddSubtasksBatch}
             onToggle={onToggle}
             onEdit={onEdit}
             onDelete={onDelete}
-            onPromote={onPromote}
+            onPin={onPin}
           />
         </div>
       )}

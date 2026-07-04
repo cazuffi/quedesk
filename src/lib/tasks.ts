@@ -1,7 +1,6 @@
 import { getDatabase } from "./db";
 import {
   queueForDueDate,
-  todayDateString,
 } from "./dueDateQueue";
 import {
   rowToTask,
@@ -13,10 +12,6 @@ import {
 
 function nowIso(): string {
   return new Date().toISOString();
-}
-
-function todayDate(): string {
-  return todayDateString();
 }
 
 async function selectTasks(sql: string, params: unknown[] = []): Promise<Task[]> {
@@ -347,7 +342,7 @@ export async function clearTask(id: string): Promise<void> {
   if (!task) return;
 
   if (task.surfaceOfId) {
-    await unpromoteSubtask(id);
+    await unpinSubtask(id);
     return;
   }
 
@@ -379,13 +374,13 @@ export async function clearCompletedInQueue(queue: TaskQueue): Promise<void> {
   }
 }
 
-export async function promoteSubtask(
+export async function pinSubtask(
   subtaskId: string,
   queue: TaskQueue,
 ): Promise<Task> {
   const subtask = await getTaskById(subtaskId);
   if (!subtask?.parentId) {
-    throw new Error("Only subtasks can be promoted");
+    throw new Error("Only subtasks can be pinned");
   }
 
   const existing = await selectTasks(
@@ -423,7 +418,7 @@ export async function promoteSubtask(
   return tasks[0];
 }
 
-export async function unpromoteSubtask(surfaceId: string): Promise<void> {
+export async function unpinSubtask(surfaceId: string): Promise<void> {
   const db = await getDatabase();
   await db.execute("DELETE FROM tasks WHERE id = $1 AND surface_of_id IS NOT NULL", [
     surfaceId,
@@ -509,19 +504,31 @@ export async function purgeArchive(): Promise<void> {
   await db.execute("DELETE FROM tasks WHERE status = 'cleared'");
 }
 
-export function isOverdue(task: Task): boolean {
-  if (!task.dueDate || task.status !== "active") return false;
-  return task.dueDate < todayDate();
+export async function getNextIncompleteSibling(
+  subtaskId: string,
+): Promise<{ next: Task | null; parent: Task | null; progress: { done: number; total: number } }> {
+  const subtask = await getTaskById(subtaskId);
+  if (!subtask) return { next: null, parent: null, progress: { done: 0, total: 0 } };
+
+  const originalId = subtask.surfaceOfId ?? subtask.id;
+  const original = subtask.surfaceOfId ? await getTaskById(originalId) : subtask;
+  if (!original?.parentId) return { next: null, parent: null, progress: { done: 0, total: 0 } };
+
+  const parent = await getTaskById(original.parentId);
+  const siblings = await selectTasks(
+    `SELECT * FROM tasks WHERE parent_id = $1 AND surface_of_id IS NULL ORDER BY sort_order ASC`,
+    [original.parentId],
+  );
+
+  const done = siblings.filter((s) => s.status === "completed").length;
+  const progress = { done, total: siblings.length };
+
+  const currentIdx = siblings.findIndex((s) => s.id === originalId);
+  const after = siblings.slice(currentIdx + 1).find((s) => s.status !== "completed");
+  if (after) return { next: after, parent, progress };
+
+  const before = siblings.slice(0, currentIdx).find((s) => s.status !== "completed");
+  return { next: before ?? null, parent, progress };
 }
 
-export function formatDueDate(dueDate: string): string {
-  const today = todayDate();
-  if (dueDate === today) return "Today";
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  if (dueDate === tomorrow.toISOString().slice(0, 10)) return "Tomorrow";
-  return new Date(`${dueDate}T12:00:00`).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
+export { isOverdue, formatDueDate } from "./dueDateQueue";

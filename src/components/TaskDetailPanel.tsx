@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { resolveParentTitle } from "../lib/taskTree";
-import { formatDueDate, isOverdue } from "../lib/tasks";
+import { formatDueDate, isOverdue } from "../lib/data";
 import type { PanelLayout } from "../contexts/UiContext";
 import type { Task, TaskQueue } from "../types";
 import { queueTabLabel } from "../types";
@@ -109,12 +109,12 @@ export function TaskDetailPanel({
 
   return (
     <aside className={shellClass} aria-label="Task details">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-4 py-3">
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-5 py-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)]">
             Task details
           </p>
-          <p className="truncate text-sm text-[var(--color-text-muted)]">
+          <p className="truncate text-xs text-[var(--color-text-muted)]">
             {queueTabLabel(task.queue)}
             {parentTitle ? ` · ↗ ${parentTitle}` : ""}
           </p>
@@ -124,7 +124,7 @@ export function TaskDetailPanel({
             <button
               type="button"
               onClick={onExpand}
-              className="rounded px-2 py-1 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+              className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
               title="Expand to full view"
             >
               Expand
@@ -133,7 +133,7 @@ export function TaskDetailPanel({
             <button
               type="button"
               onClick={onCollapse}
-              className="rounded px-2 py-1 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+              className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
               title="Back to side panel"
             >
               Side panel
@@ -142,7 +142,7 @@ export function TaskDetailPanel({
           <button
             type="button"
             onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
+            className="rounded-md px-2.5 py-1 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
           >
             Close
           </button>
@@ -153,54 +153,68 @@ export function TaskDetailPanel({
         onSubmit={handleSubmit}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
           <div className="flex items-start gap-3">
             {task.status !== "cleared" && (
               <input
                 type="checkbox"
                 checked={completed}
                 onChange={() => onToggle(task)}
-                className="mt-2 h-4 w-4 accent-[var(--color-accent)]"
+                className="mt-2.5 h-4 w-4 cursor-pointer accent-[var(--color-accent)]"
               />
             )}
             <label className="min-w-0 flex-1 text-sm">
-              <span className="mb-1 block text-[var(--color-text-muted)]">
+              <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
                 Title
               </span>
               <input
                 value={title}
                 onChange={(e) => markDirty(setTitle, e.target.value)}
-                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-base font-medium outline-none focus:border-[var(--color-accent)]"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-base font-medium outline-none transition-colors focus:border-[var(--color-accent)]"
               />
             </label>
           </div>
 
           <div className="grid gap-3">
-            <label className="block text-sm">
-              <span className="mb-1 block text-[var(--color-text-muted)]">
+            <div className="block text-sm">
+              <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
                 Due date
               </span>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => markDirty(setDueDate, e.target.value)}
-                className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none focus:border-[var(--color-accent)]"
-              />
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => markDirty(setDueDate, e.target.value)}
+                  className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--color-accent)]"
+                />
+                {dueDate && (
+                  <button
+                    type="button"
+                    onClick={() => markDirty(setDueDate, "")}
+                    className="shrink-0 rounded-lg px-2.5 py-2 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-danger-soft)] hover:text-[var(--color-danger)]"
+                    title="Clear due date"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               {task.dueDate && (
                 <span
                   className={[
-                    "mt-1 block text-xs",
-                    overdue ? "text-red-500" : "text-[var(--color-text-muted)]",
+                    "mt-1 block text-[11px]",
+                    overdue
+                      ? "text-[var(--color-danger)]"
+                      : "text-[var(--color-text-muted)]",
                   ].join(" ")}
                 >
                   {formatDueDate(task.dueDate)}
                 </span>
               )}
-            </label>
+            </div>
 
             {!isSurface && task.status !== "cleared" && (
               <div className="block text-sm">
-                <span className="mb-1 block text-[var(--color-text-muted)]">
+                <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
                   Queue
                 </span>
                 <MoveToMenu
@@ -212,31 +226,31 @@ export function TaskDetailPanel({
           </div>
 
           <label className="block text-sm">
-            <span className="mb-1 block text-[var(--color-text-muted)]">
+            <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
               Tags (comma-separated)
             </span>
             <input
               value={tags}
               onChange={(e) => markDirty(setTags, e.target.value)}
               placeholder="work, urgent"
-              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none focus:border-[var(--color-accent)]"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
             />
           </label>
 
           <label className="block text-sm">
-            <span className="mb-1 block text-[var(--color-text-muted)]">
+            <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
               Source link
             </span>
             <input
               value={sourceLink}
               onChange={(e) => markDirty(setSourceLink, e.target.value)}
               placeholder="Link or path — with or without https://"
-              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none focus:border-[var(--color-accent)]"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
             />
           </label>
 
           <div className="text-sm">
-            <span className="mb-1 block text-[var(--color-text-muted)]">
+            <span className="mb-1 block text-[11px] font-medium text-[var(--color-text-muted)]">
               Notes (Markdown)
             </span>
             <MarkdownNotes
@@ -247,7 +261,7 @@ export function TaskDetailPanel({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5 py-3">
           <button
             type="button"
             onClick={async () => {
@@ -257,20 +271,20 @@ export function TaskDetailPanel({
               });
               if (ok) onDelete(task.id);
             }}
-            className="text-sm text-red-500 hover:underline"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
           >
             Delete
           </button>
           <div className="flex items-center gap-2">
             {dirty && (
-              <span className="text-xs text-[var(--color-text-muted)]">
-                Unsaved changes
+              <span className="text-[11px] text-[var(--color-text-muted)]">
+                Unsaved
               </span>
             )}
             <button
               type="submit"
               disabled={busy || !title.trim()}
-              className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+              className="rounded-xl bg-[var(--color-accent)] px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md disabled:opacity-40 disabled:shadow-none"
             >
               Save
             </button>

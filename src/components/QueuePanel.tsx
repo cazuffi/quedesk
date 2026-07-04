@@ -3,6 +3,7 @@ import { useConfirm } from "../contexts/ConfirmContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
 import type { QueueTabConfig, TaskQueue } from "../types";
+import { NextSubtaskPrompt } from "./NextSubtaskPrompt";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
 
@@ -24,14 +25,16 @@ export function QueuePanel({
     subtasksFor,
     addTask,
     addSubtask,
+    addSubtasksBatch,
+    editTask,
     toggleComplete,
     clearOne,
     clearCompleted,
     removeTask,
     purgeAllArchive,
     moveTaskToQueue,
-    promoteSubtaskToQueue,
-    unpromoteSurface,
+    pinSubtaskToQueue,
+    unpinFromQueue,
   } = useTasks();
 
   const { selectedTaskId, selectTask } = useUi();
@@ -59,9 +62,13 @@ export function QueuePanel({
     onTaskMoved?.(queue);
   }
 
-  async function handlePromote(subtaskId: string, queue: TaskQueue) {
-    await promoteSubtaskToQueue(subtaskId, queue);
+  async function handlePin(subtaskId: string, queue: TaskQueue) {
+    await pinSubtaskToQueue(subtaskId, queue);
     onTaskMoved?.(queue);
+  }
+
+  async function handleClearDueDate(id: string) {
+    await editTask(id, { dueDate: null });
   }
 
   async function handleDelete(id: string) {
@@ -70,7 +77,7 @@ export function QueuePanel({
         ? "Permanently delete this archived task?"
         : "Delete this task?";
     const ok = await confirm(message, {
-      confirmLabel: tab.id === "archive" ? "Delete" : "Delete",
+      confirmLabel: "Delete",
       danger: true,
     });
     if (!ok) return;
@@ -100,18 +107,20 @@ export function QueuePanel({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[var(--color-border)] px-4 py-3">
-        <h2 className="text-lg font-semibold">
+      <div className="px-5 py-4">
+        <h2 className="text-base font-semibold tracking-tight">
           {isSearchActive ? "Search results" : tab.label}
         </h2>
-        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+        <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
           {isSearchActive
             ? `${queueTasks.length} matching task${queueTasks.length === 1 ? "" : "s"}`
             : tab.description}
         </p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-5 pb-5">
+        <NextSubtaskPrompt />
+
         {!isSearchActive && tab.id !== "archive" && (
           <TaskInput
             placeholder={`Add to ${tab.label}…`}
@@ -120,16 +129,16 @@ export function QueuePanel({
         )}
 
         {!isSearchActive && completedCount > 0 && (
-          <div className="flex items-center justify-between rounded-lg border border-dashed border-[var(--color-border)] px-3 py-2 text-sm">
+          <div className="flex items-center justify-between rounded-xl border border-dashed border-[var(--color-border)] px-3.5 py-2 text-xs">
             <span className="text-[var(--color-text-muted)]">
-              {completedCount} completed — strikethrough until cleared
+              {completedCount} completed
             </span>
             <button
               type="button"
               onClick={() => clearCompleted(tab.id as TaskQueue)}
-              className="text-[var(--color-accent)] hover:underline"
+              className="font-medium text-[var(--color-accent)] transition-colors hover:text-[var(--color-accent-hover)]"
             >
-              Clear all to archive
+              Clear to archive
             </button>
           </div>
         )}
@@ -139,7 +148,7 @@ export function QueuePanel({
             <button
               type="button"
               onClick={handlePurgeArchive}
-              className="text-sm text-red-500 hover:underline"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--color-danger)] transition-colors hover:bg-[var(--color-danger-soft)]"
             >
               Purge archive
             </button>
@@ -165,8 +174,10 @@ export function QueuePanel({
           onDelete={handleDelete}
           onMove={handleMove}
           onAddSubtask={addSubtask}
-          onPromote={handlePromote}
-          onUnpromote={unpromoteSurface}
+          onAddSubtasksBatch={addSubtasksBatch}
+          onPin={handlePin}
+          onUnpin={unpinFromQueue}
+          onClearDueDate={handleClearDueDate}
           subtasksFor={subtasksFor}
         />
       </div>

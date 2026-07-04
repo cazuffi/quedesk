@@ -23,18 +23,20 @@ function TabButton({
     disabled: tab.id === "archive",
   });
 
+  const highlight = isOver || isDropTarget;
+
   return (
     <button
       ref={setNodeRef}
       type="button"
       onClick={onSelect}
       className={[
-        "shrink-0 border-b-2 px-3 py-3 text-sm font-medium transition-colors",
+        "relative shrink-0 px-3.5 py-2.5 text-xs font-medium tracking-wide transition-all",
         isActive
-          ? "border-[var(--color-accent)] text-[var(--color-accent)]"
-          : "border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-text)]",
-        isOver || isDropTarget
-          ? "border-[var(--color-accent)] bg-[var(--color-accent)]/15 text-[var(--color-accent)] ring-2 ring-inset ring-[var(--color-accent)]/30"
+          ? "text-[var(--color-accent)]"
+          : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]",
+        highlight
+          ? "rounded-lg bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
           : "",
         tab.id !== "archive" ? "cursor-copy" : "",
       ].join(" ")}
@@ -46,6 +48,9 @@ function TabButton({
       }
     >
       {tab.label}
+      {isActive && (
+        <span className="absolute bottom-0 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full bg-[var(--color-accent)]" />
+      )}
     </button>
   );
 }
@@ -57,7 +62,7 @@ export function TabBar({
 }: TabBarProps) {
   return (
     <nav
-      className="flex gap-1 overflow-x-auto border-b border-[var(--color-border)] px-4"
+      className="flex gap-0.5 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-5"
       aria-label="Queues"
     >
       {QUEUE_TABS.map((tab) => (

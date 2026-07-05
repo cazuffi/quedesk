@@ -233,7 +233,7 @@ export function QueuePanel({
           selectedTaskId={selectedTaskId}
           emphasis={listEmphasis}
           showQueueBadge={isSearchActive}
-          allowSubtasks={!isSearchActive && tab.id !== "archive"}
+          allowSubtasks={!isSearchActive}
           highlightNew={isInboxTab}
           batchSelectionMode={isInboxTab && batchMode}
           selectedBatchIds={selectedIds}

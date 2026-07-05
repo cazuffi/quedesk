@@ -9,6 +9,7 @@ import {
 } from "react";
 import {
   getSubtasks,
+  isArchiveRoot,
 } from "../lib/taskTree";
 import {
   clearCompletedInQueue,
@@ -150,7 +151,13 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   const tasksForTab = useCallback(
     (tab: QueueTab): Task[] => {
       if (tab === "archive") {
-        return tasks.filter((t) => t.status === "cleared");
+        return tasks
+          .filter(isArchiveRoot)
+          .sort((a, b) => {
+            const aTime = a.clearedAt ? Date.parse(a.clearedAt) : 0;
+            const bTime = b.clearedAt ? Date.parse(b.clearedAt) : 0;
+            return bTime - aTime;
+          });
       }
       return tasks
         .filter(
@@ -163,7 +170,14 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   );
 
   const subtasksFor = useCallback(
-    (parentId: string) => getSubtasks(tasks, parentId),
+    (parentId: string) => {
+      const parent = tasks.find((t) => t.id === parentId);
+      const subs = getSubtasks(tasks, parentId);
+      if (parent?.status === "cleared") {
+        return subs.filter((t) => t.status === "cleared");
+      }
+      return subs.filter((t) => t.status !== "cleared");
+    },
     [tasks],
   );
 

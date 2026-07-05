@@ -27,6 +27,15 @@ export function getSubtasks(allTasks: Task[], parentId: string): Task[] {
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
+/** Top-level archive entries only — excludes nested subtasks and pinned copies. */
+export function isArchiveRoot(task: Task): boolean {
+  return (
+    task.status === "cleared" &&
+    task.parentId === null &&
+    task.surfaceOfId === null
+  );
+}
+
 export function getSurfacesForSubtask(
   allTasks: Task[],
   subtaskId: string,

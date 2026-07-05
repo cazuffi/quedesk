@@ -284,6 +284,11 @@ async function syncLinkedStatus(
   await sb.from("tasks").update(updates).eq("surface_of_id", taskId);
 }
 
+async function deleteSurfacesForSubtask(subtaskId: string): Promise<void> {
+  const sb = getSupabase();
+  await sb.from("tasks").delete().eq("surface_of_id", subtaskId);
+}
+
 export async function setTaskStatus(
   id: string,
   status: TaskStatus,
@@ -313,6 +318,11 @@ export async function setTaskStatus(
     .from("tasks")
     .update({ status: "cleared", cleared_at: timestamp, queue: "backlog" })
     .eq("id", id);
+
+  const cleared = await getTaskById(id);
+  if (cleared?.parentId) {
+    await deleteSurfacesForSubtask(id);
+  }
 }
 
 export async function toggleTaskComplete(task: Task): Promise<void> {
@@ -328,11 +338,26 @@ export async function clearTask(id: string): Promise<void> {
   if (!task) return;
 
   if (task.surfaceOfId) {
-    await unpinSubtask(id);
+    await clearTask(task.surfaceOfId);
     return;
   }
 
   await setTaskStatus(id, "cleared");
+
+  if (!task.parentId) {
+    const userId = await getUserId();
+    const sb = getSupabase();
+    const { data: subtasks } = await sb
+      .from("tasks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("parent_id", id)
+      .is("surface_of_id", null);
+
+    for (const subtask of subtasks ?? []) {
+      await setTaskStatus(subtask.id as string, "cleared");
+    }
+  }
 }
 
 export async function clearCompletedInQueue(queue: TaskQueue): Promise<void> {
@@ -362,6 +387,15 @@ export async function clearCompletedInQueue(queue: TaskQueue): Promise<void> {
       .update({ status: "cleared", cleared_at: timestamp })
       .eq("parent_id", parent.id)
       .eq("status", "completed");
+
+    const { data: subtasks } = await sb
+      .from("tasks")
+      .select("id")
+      .eq("parent_id", parent.id);
+
+    for (const subtask of subtasks ?? []) {
+      await deleteSurfacesForSubtask(subtask.id as string);
+    }
   }
 }
 

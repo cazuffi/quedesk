@@ -295,6 +295,11 @@ async function syncLinkedStatus(
   }
 }
 
+async function deleteSurfacesForSubtask(subtaskId: string): Promise<void> {
+  const db = await getDatabase();
+  await db.execute("DELETE FROM tasks WHERE surface_of_id = $1", [subtaskId]);
+}
+
 export async function setTaskStatus(
   id: string,
   status: TaskStatus,
@@ -327,6 +332,11 @@ export async function setTaskStatus(
      WHERE id = $2`,
     [timestamp, id],
   );
+
+  const cleared = await getTaskById(id);
+  if (cleared?.parentId) {
+    await deleteSurfacesForSubtask(id);
+  }
 }
 
 export async function toggleTaskComplete(task: Task): Promise<void> {
@@ -342,11 +352,21 @@ export async function clearTask(id: string): Promise<void> {
   if (!task) return;
 
   if (task.surfaceOfId) {
-    await unpinSubtask(id);
+    await clearTask(task.surfaceOfId);
     return;
   }
 
   await setTaskStatus(id, "cleared");
+
+  if (!task.parentId) {
+    const subtasks = await selectTasks(
+      `SELECT id FROM tasks WHERE parent_id = $1 AND surface_of_id IS NULL`,
+      [id],
+    );
+    for (const subtask of subtasks) {
+      await setTaskStatus(subtask.id, "cleared");
+    }
+  }
 }
 
 export async function clearCompletedInQueue(queue: TaskQueue): Promise<void> {
@@ -371,6 +391,14 @@ export async function clearCompletedInQueue(queue: TaskQueue): Promise<void> {
        WHERE parent_id = $2 AND status = 'completed'`,
       [timestamp, parent.id],
     );
+
+    const subtasks = await selectTasks(
+      `SELECT id FROM tasks WHERE parent_id = $1`,
+      [parent.id],
+    );
+    for (const subtask of subtasks) {
+      await deleteSurfacesForSubtask(subtask.id);
+    }
   }
 }
 

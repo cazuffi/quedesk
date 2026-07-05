@@ -1,4 +1,6 @@
 import { WEB_APP_VERSION } from "../lib/appVersion";
+import { isWeb } from "../lib/platform";
+import { useUi } from "../contexts/UiContext";
 
 interface StatusBarProps {
   dbReady: boolean;
@@ -6,6 +8,7 @@ interface StatusBarProps {
 }
 
 export function StatusBar({ dbReady, dbError }: StatusBarProps) {
+  const { openCaptureSettings } = useUi();
   const statusLabel = dbError ? "Error" : dbReady ? "Ready" : "Connecting…";
 
   return (
@@ -13,19 +16,30 @@ export function StatusBar({ dbReady, dbError }: StatusBarProps) {
       <span className="font-medium text-[var(--color-text)]">
         QueDesk {WEB_APP_VERSION}
       </span>
-      <span className="flex items-center gap-1.5">
-        <span
-          className={[
-            "inline-block h-2 w-2 rounded-full sm:h-1.5 sm:w-1.5",
-            dbError
-              ? "bg-[var(--color-danger)]"
-              : dbReady
-                ? "bg-[var(--color-success)]"
-                : "bg-amber-400",
-          ].join(" ")}
-          aria-hidden
-        />
-        {statusLabel}
+      <span className="flex items-center gap-2 sm:gap-3">
+        {isWeb() ? (
+          <button
+            type="button"
+            onClick={openCaptureSettings}
+            className="hidden font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)] sm:inline"
+          >
+            Action Button setup
+          </button>
+        ) : null}
+        <span className="flex items-center gap-1.5">
+          <span
+            className={[
+              "inline-block h-2 w-2 rounded-full sm:h-1.5 sm:w-1.5",
+              dbError
+                ? "bg-[var(--color-danger)]"
+                : dbReady
+                  ? "bg-[var(--color-success)]"
+                  : "bg-amber-400",
+            ].join(" ")}
+            aria-hidden
+          />
+          {statusLabel}
+        </span>
       </span>
     </footer>
   );

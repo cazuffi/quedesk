@@ -13,6 +13,8 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FocusView } from "./components/FocusView";
 import { Header } from "./components/Header";
+import { QuickCaptureModal } from "./components/QuickCaptureModal";
+import { CaptureSettingsPanel } from "./components/CaptureSettingsPanel";
 import { QueuePanel } from "./components/QueuePanel";
 import { StatusBar } from "./components/StatusBar";
 import { TabBar } from "./components/TabBar";
@@ -28,6 +30,7 @@ import {
   queueFromDragEvent,
 } from "./lib/dnd";
 import { isDesktop } from "./lib/platform";
+import { useCaptureShortcut } from "./hooks/useCaptureShortcut";
 import { todayDateString } from "./lib/dueDateQueue";
 import {
   parseTaskDragId,
@@ -60,11 +63,19 @@ function AppContent() {
     selectedTaskId,
     panelLayout,
     focusMode,
+    captureOpen,
+    captureSettingsOpen,
     closePanel,
     expandPanel,
     collapsePanel,
     selectTask,
+    openCapture,
+    closeCapture,
+    closeCaptureSettings,
+    openCaptureSettings,
   } = useUi();
+
+  useCaptureShortcut(openCapture, !focusMode);
 
   const isSearchActive = searchQuery.trim().length > 0;
 
@@ -298,6 +309,17 @@ function AppContent() {
       <DragOverlay adjustScale={false} dropAnimation={null}>
         {draggingTask ? <TaskDragPreview task={draggingTask} /> : null}
       </DragOverlay>
+
+      {captureOpen ? (
+        <QuickCaptureModal
+          onClose={closeCapture}
+          onOpenSettings={openCaptureSettings}
+        />
+      ) : null}
+
+      {captureSettingsOpen ? (
+        <CaptureSettingsPanel onClose={closeCaptureSettings} />
+      ) : null}
     </DndContext>
   );
 }

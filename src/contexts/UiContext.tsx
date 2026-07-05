@@ -15,6 +15,8 @@ interface UiContextValue {
   panelLayout: PanelLayout;
   focusMode: boolean;
   hideCompleted: boolean;
+  captureOpen: boolean;
+  captureSettingsOpen: boolean;
   selectTask: (task: Task | null) => void;
   closePanel: () => void;
   expandPanel: () => void;
@@ -22,6 +24,10 @@ interface UiContextValue {
   toggleFocusMode: () => void;
   setFocusMode: (enabled: boolean) => void;
   toggleHideCompleted: () => void;
+  openCapture: () => void;
+  closeCapture: () => void;
+  openCaptureSettings: () => void;
+  closeCaptureSettings: () => void;
 }
 
 const UiContext = createContext<UiContextValue | null>(null);
@@ -39,6 +45,8 @@ export function UiProvider({
   const [panelLayout, setPanelLayout] = useState<PanelLayout>("closed");
   const [focusMode, setFocusMode] = useState(initialFocusMode);
   const [hideCompleted, setHideCompleted] = useState(true);
+  const [captureOpen, setCaptureOpen] = useState(false);
+  const [captureSettingsOpen, setCaptureSettingsOpen] = useState(false);
 
   const isMobile = () => window.innerWidth < 640;
 
@@ -82,12 +90,31 @@ export function UiProvider({
     setHideCompleted((value) => !value);
   }, []);
 
+  const openCapture = useCallback(() => {
+    setCaptureOpen(true);
+  }, []);
+
+  const closeCapture = useCallback(() => {
+    setCaptureOpen(false);
+  }, []);
+
+  const openCaptureSettings = useCallback(() => {
+    setCaptureSettingsOpen(true);
+    setCaptureOpen(false);
+  }, []);
+
+  const closeCaptureSettings = useCallback(() => {
+    setCaptureSettingsOpen(false);
+  }, []);
+
   const value = useMemo(
     () => ({
       selectedTaskId,
       panelLayout,
       focusMode,
       hideCompleted,
+      captureOpen,
+      captureSettingsOpen,
       selectTask,
       closePanel,
       expandPanel,
@@ -95,12 +122,18 @@ export function UiProvider({
       toggleFocusMode,
       setFocusMode: setFocusModeExplicit,
       toggleHideCompleted,
+      openCapture,
+      closeCapture,
+      openCaptureSettings,
+      closeCaptureSettings,
     }),
     [
       selectedTaskId,
       panelLayout,
       focusMode,
       hideCompleted,
+      captureOpen,
+      captureSettingsOpen,
       selectTask,
       closePanel,
       expandPanel,
@@ -108,6 +141,10 @@ export function UiProvider({
       toggleFocusMode,
       setFocusModeExplicit,
       toggleHideCompleted,
+      openCapture,
+      closeCapture,
+      openCaptureSettings,
+      closeCaptureSettings,
     ],
   );
 

@@ -51,6 +51,34 @@ export default defineConfig(async ({ mode }) => {
                     purpose: "maskable",
                   },
                 ],
+                shortcuts: [
+                  {
+                    name: "Capture to Inbox",
+                    short_name: "Capture",
+                    description: "Quick capture a task to Inbox",
+                    url: "/capture",
+                    icons: [
+                      {
+                        src: "icon-192.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                      },
+                    ],
+                  },
+                  {
+                    name: "Focus — Today",
+                    short_name: "Focus",
+                    description: "Open the Today focus sidecar",
+                    url: "/focus",
+                    icons: [
+                      {
+                        src: "icon-192.png",
+                        sizes: "192x192",
+                        type: "image/png",
+                      },
+                    ],
+                  },
+                ],
               },
             }),
           ]

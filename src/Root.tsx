@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import App from "./App";
+import { isCaptureRoute } from "./lib/captureWindow";
 import { isFocusRoute } from "./lib/focusWindow";
 import { isDesktop } from "./lib/platform";
 
@@ -47,21 +48,35 @@ export function Root() {
 function WebRoot() {
   const [Gate, setGate] = useState<ComponentType<{ children: ReactNode }> | null>(null);
   const [FocusApp, setFocusApp] = useState<ComponentType | null>(null);
+  const [CaptureApp, setCaptureApp] = useState<ComponentType | null>(null);
   const focusRoute = isFocusRoute();
+  const captureRoute = isCaptureRoute();
 
   useEffect(() => {
     import("./components/AuthGate").then((m) => setGate(() => m.AuthGate));
     if (focusRoute) {
       import("./FocusWidgetApp").then((m) => setFocusApp(() => m.FocusWidgetApp));
     }
-  }, [focusRoute]);
+    if (captureRoute) {
+      import("./CaptureWidgetApp").then((m) =>
+        setCaptureApp(() => m.CaptureWidgetApp),
+      );
+    }
+  }, [focusRoute, captureRoute]);
 
   if (!Gate) return null;
+  if (captureRoute && !CaptureApp) return null;
   if (focusRoute && !FocusApp) return null;
 
   return (
     <Gate>
-      {focusRoute && FocusApp ? <FocusApp /> : <App />}
+      {captureRoute && CaptureApp ? (
+        <CaptureApp />
+      ) : focusRoute && FocusApp ? (
+        <FocusApp />
+      ) : (
+        <App />
+      )}
     </Gate>
   );
 }

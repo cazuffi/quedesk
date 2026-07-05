@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { CaptureSettingsPanel } from "./CaptureSettingsPanel";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
 import { isWeb } from "../lib/platform";
+import {
+  captureAppUrl,
+} from "../lib/captureWindow";
 import { focusAppUrl, openFocusPopout } from "../lib/focusWindow";
 import { WEB_APP_VERSION } from "../lib/appVersion";
 import { SearchBar } from "./SearchBar";
@@ -11,9 +13,8 @@ import { SearchBar } from "./SearchBar";
 export function Header() {
   const { resolved, toggle } = useTheme();
   const { searchQuery, setSearchQuery } = useTasks();
-  const { focusMode, toggleFocusMode } = useUi();
+  const { focusMode, toggleFocusMode, openCapture } = useUi();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [captureOpen, setCaptureOpen] = useState(false);
   const web = isWeb();
 
   return (
@@ -94,15 +95,27 @@ export function Header() {
             >
               {resolved === "dark" ? "☀ Light" : "☾ Dark"}
             </button>
-            {web && (
-              <button
-                type="button"
-                onClick={() => setCaptureOpen(true)}
-                className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
-              >
-                Quick capture
-              </button>
-            )}
+            {web && !focusMode ? (
+              <>
+                <button
+                  type="button"
+                  onClick={openCapture}
+                  className="rounded-lg bg-[var(--color-accent-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] transition-all hover:bg-[var(--color-accent)] hover:text-white"
+                  title="Capture to Inbox (Ctrl+Shift+N)"
+                >
+                  Capture
+                </button>
+                <a
+                  href={captureAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+                  title="Bookmark /capture for a quick-capture window"
+                >
+                  /capture
+                </a>
+              </>
+            ) : null}
           </div>
 
           {/* Mobile menu toggle */}
@@ -121,29 +134,50 @@ export function Header() {
                   className="fixed inset-0 z-30"
                   onClick={() => setMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full z-40 mt-1 w-40 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-1 shadow-xl">
-            <button
-              type="button"
-              onClick={() => {
-                toggleFocusMode();
-                setMenuOpen(false);
-              }}
-              className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-            >
-              {focusMode ? "Exit focus" : "Focus mode"}
-            </button>
-            {isWeb() && !focusMode ? (
-              <button
-                type="button"
-                onClick={() => {
-                  openFocusPopout();
-                  setMenuOpen(false);
-                }}
-                className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-              >
-                Pop out focus
-              </button>
-            ) : null}
+                <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-1 shadow-xl">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toggleFocusMode();
+                      setMenuOpen(false);
+                    }}
+                    className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+                  >
+                    {focusMode ? "Exit focus" : "Focus mode"}
+                  </button>
+                  {web && !focusMode ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openFocusPopout();
+                          setMenuOpen(false);
+                        }}
+                        className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+                      >
+                        Pop out focus
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openCapture();
+                          setMenuOpen(false);
+                        }}
+                        className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[var(--color-accent)] transition-colors active:bg-[var(--color-surface)]"
+                      >
+                        Capture to Inbox
+                      </button>
+                      <a
+                        href={captureAppUrl()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Open /capture
+                      </a>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => {
@@ -154,28 +188,12 @@ export function Header() {
                   >
                     {resolved === "dark" ? "☀ Light mode" : "☾ Dark mode"}
                   </button>
-                  {web && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCaptureOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-                    >
-                      Quick capture
-                    </button>
-                  )}
                 </div>
               </>
             )}
           </div>
         </div>
       </div>
-
-      {captureOpen && web && (
-        <CaptureSettingsPanel onClose={() => setCaptureOpen(false)} />
-      )}
     </header>
   );
 }

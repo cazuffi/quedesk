@@ -60,6 +60,13 @@ export function targetQueueForTask(task: Task): TaskQueue | null {
   return queueForDueDate(task.dueDate);
 }
 
+export function shouldClearDueDateOnMove(
+  fromQueue: TaskQueue,
+  toQueue: TaskQueue,
+): boolean {
+  return fromQueue === "today" && (toQueue === "week" || toQueue === "backlog");
+}
+
 export function isOverdue(task: Task): boolean {
   if (!task.dueDate || task.status !== "active") return false;
   return task.dueDate < todayDateString();

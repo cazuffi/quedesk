@@ -1,6 +1,7 @@
 import { getDatabase } from "./db";
 import {
   queueForDueDate,
+  shouldClearDueDateOnMove,
 } from "./dueDateQueue";
 import {
   rowToTask,
@@ -470,8 +471,12 @@ export async function moveTask(
     return;
   }
 
+  const clearDueDate = shouldClearDueDateOnMove(task.queue, queue);
+
   await db.execute(
-    `UPDATE tasks SET queue = $1, sort_order = $2 WHERE id = $3`,
+    clearDueDate
+      ? `UPDATE tasks SET queue = $1, sort_order = $2, due_date = NULL WHERE id = $3`
+      : `UPDATE tasks SET queue = $1, sort_order = $2 WHERE id = $3`,
     [queue, sortOrder, id],
   );
 

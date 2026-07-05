@@ -1,5 +1,5 @@
 import { getSupabase } from "./supabase";
-import { queueForDueDate } from "./dueDateQueue";
+import { queueForDueDate, shouldClearDueDateOnMove } from "./dueDateQueue";
 import type { Task, TaskQueue, TaskStatus } from "../types";
 
 function nowIso(): string {
@@ -463,9 +463,16 @@ export async function moveTask(
   const task = await getTaskById(id);
   if (!task) return;
 
+  const clearDueDate =
+    !task.surfaceOfId && shouldClearDueDateOnMove(task.queue, queue);
+
   await sb
     .from("tasks")
-    .update({ queue, sort_order: sortOrder })
+    .update(
+      clearDueDate
+        ? { queue, sort_order: sortOrder, due_date: null }
+        : { queue, sort_order: sortOrder },
+    )
     .eq("id", id);
 
   if (!task.parentId && !task.surfaceOfId) {

@@ -10,9 +10,20 @@ function isQueueDrop(id: UniqueIdentifier): boolean {
   return parseQueueDropId(id) !== null;
 }
 
+function withoutQueueDrops(
+  args: Parameters<CollisionDetection>[0],
+): Parameters<CollisionDetection>[0] {
+  return {
+    ...args,
+    droppableContainers: args.droppableContainers.filter(
+      (container) => !isQueueDrop(container.id),
+    ),
+  };
+}
+
 /**
- * Tab drops only when the pointer is over a tab — not when the dragged card's
- * bounding box intersects the tab bar while reordering in the list.
+ * Tab drops only when the pointer is over a tab. List reordering ignores tabs
+ * entirely so dragging near the top-left still targets tasks, not Today/Inbox.
  */
 export const queueAwareCollisionDetection: CollisionDetection = (args) => {
   const pointerHits = pointerWithin(args).filter((collision) =>
@@ -20,7 +31,7 @@ export const queueAwareCollisionDetection: CollisionDetection = (args) => {
   );
   if (pointerHits.length > 0) return pointerHits;
 
-  return closestCenter(args);
+  return closestCenter(withoutQueueDrops(args));
 };
 
 export function queueFromDragEvent(event: {

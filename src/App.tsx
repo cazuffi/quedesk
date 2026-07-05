@@ -62,6 +62,7 @@ function AppContent() {
     closePanel,
     expandPanel,
     collapsePanel,
+    selectTask,
   } = useUi();
 
   const isSearchActive = searchQuery.trim().length > 0;
@@ -257,6 +258,7 @@ function AppContent() {
                     onToggle={toggleComplete}
                     onMove={moveTaskToQueue}
                     onDelete={handleDeleteFromPanel}
+                    onOpenTask={selectTask}
                   />
                 </div>
               )}
@@ -283,6 +285,7 @@ function AppContent() {
                     onToggle={toggleComplete}
                     onMove={moveTaskToQueue}
                     onDelete={handleDeleteFromPanel}
+                    onOpenTask={selectTask}
                   />
                 </div>
               )}
@@ -305,6 +308,7 @@ function AppContent() {
           onToggle={toggleComplete}
           onMove={moveTaskToQueue}
           onDelete={handleDeleteFromPanel}
+          onOpenTask={selectTask}
         />
       )}
 

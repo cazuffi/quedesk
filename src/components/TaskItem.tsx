@@ -158,32 +158,37 @@ export function TaskItem({
           </button>
 
           {isSurface && (
-            <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-              <span className="shrink-0 font-medium">Pinned from</span>
-              {parentTitle ? (
-                parentTask ? (
-                  <button
-                    type="button"
-                    onClick={() => onEdit(parentTask)}
-                    className="max-w-[10rem] truncate font-medium text-[var(--color-accent)] transition-colors hover:underline sm:max-w-[14rem]"
-                    title={parentTitle}
-                  >
-                    {parentTitle}
-                  </button>
-                ) : (
+            parentTask ? (
+              <button
+                type="button"
+                onClick={() => onEdit(parentTask)}
+                className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)] transition-colors active:border-[var(--color-accent)]/30 active:bg-[var(--color-accent-soft)] sm:hover:border-[var(--color-accent)]/30 sm:hover:bg-[var(--color-accent-soft)]"
+                title={
+                  parentTitle ? `Open ${parentTitle}` : "Open parent task"
+                }
+              >
+                <span className="shrink-0 font-medium">Pinned from</span>
+                <span className="max-w-[10rem] truncate font-medium text-[var(--color-accent)] sm:max-w-[14rem]">
+                  {parentTitle ?? "parent"}
+                </span>
+              </button>
+            ) : (
+              <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
+                <span className="shrink-0 font-medium">Pinned from</span>
+                {parentTitle ? (
                   <span
                     className="max-w-[10rem] truncate font-medium text-[var(--color-text)] sm:max-w-[14rem]"
                     title={parentTitle}
                   >
                     {parentTitle}
                   </span>
-                )
-              ) : (
-                <span className="font-medium text-[var(--color-text-muted)]">
-                  parent
-                </span>
-              )}
-            </span>
+                ) : (
+                  <span className="font-medium text-[var(--color-text-muted)]">
+                    parent
+                  </span>
+                )}
+              </span>
+            )
           )}
 
           {isNewCapture && !completed && (

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useConfirm } from "../contexts/ConfirmContext";
-import { resolveParentTitle } from "../lib/taskTree";
+import { resolveParentTask, resolveParentTitle } from "../lib/taskTree";
 import { formatDueDate, isOverdue } from "../lib/data";
 import type { PanelLayout } from "../contexts/UiContext";
 import type { Task, TaskQueue } from "../types";
@@ -28,6 +28,7 @@ interface TaskDetailPanelProps {
   onToggle: (task: Task) => void;
   onMove: (id: string, queue: TaskQueue) => void;
   onDelete: (id: string) => void;
+  onOpenTask: (task: Task) => void;
 }
 
 export function TaskDetailPanel({
@@ -41,6 +42,7 @@ export function TaskDetailPanel({
   onToggle,
   onMove,
   onDelete,
+  onOpenTask,
 }: TaskDetailPanelProps) {
   const [title, setTitle] = useState(task.title);
   const [notes, setNotes] = useState(task.notes);
@@ -53,6 +55,7 @@ export function TaskDetailPanel({
 
   const isSurface = task.surfaceOfId !== null;
   const parentTitle = resolveParentTitle(allTasks, task);
+  const parentTask = isSurface ? resolveParentTask(allTasks, task) : null;
   const completed = task.status === "completed";
   const overdue = isOverdue(task);
 
@@ -127,19 +130,35 @@ export function TaskDetailPanel({
             {queueTabLabel(task.queue)}
           </p>
           {isSurface ? (
-            <span className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
-              <span className="shrink-0 font-medium">Pinned from</span>
-              {parentTitle ? (
-                <span
-                  className="max-w-[12rem] truncate font-medium text-[var(--color-text)]"
-                  title={parentTitle}
-                >
-                  {parentTitle}
+            parentTask ? (
+              <button
+                type="button"
+                onClick={() => onOpenTask(parentTask)}
+                className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)] transition-colors active:border-[var(--color-accent)]/30 active:bg-[var(--color-accent-soft)] sm:hover:border-[var(--color-accent)]/30 sm:hover:bg-[var(--color-accent-soft)]"
+                title={
+                  parentTitle ? `Open ${parentTitle}` : "Open parent task"
+                }
+              >
+                <span className="shrink-0 font-medium">Pinned from</span>
+                <span className="max-w-[12rem] truncate font-medium text-[var(--color-accent)]">
+                  {parentTitle ?? "parent"}
                 </span>
-              ) : (
-                <span className="font-medium">parent</span>
-              )}
-            </span>
+              </button>
+            ) : (
+              <span className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
+                <span className="shrink-0 font-medium">Pinned from</span>
+                {parentTitle ? (
+                  <span
+                    className="max-w-[12rem] truncate font-medium text-[var(--color-text)]"
+                    title={parentTitle}
+                  >
+                    {parentTitle}
+                  </span>
+                ) : (
+                  <span className="font-medium">parent</span>
+                )}
+              </span>
+            )
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">

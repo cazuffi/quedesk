@@ -1,8 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useConfirm } from "../contexts/ConfirmContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
+import { countRecentlyCaptured } from "../lib/recentCapture";
 import type { QueueTabConfig, TaskQueue } from "../types";
+import { InboxBatchBar, InboxTriageHint } from "./InboxBatchBar";
 import { NextSubtaskPrompt } from "./NextSubtaskPrompt";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
@@ -40,6 +42,10 @@ export function QueuePanel({
 
   const { selectedTaskId, selectTask } = useUi();
   const { confirm } = useConfirm();
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+
+  const isInboxTab = tab.id === "inbox" && !isSearchActive;
 
   const queueTasks = useMemo(() => {
     if (isSearchActive) return searchResults;
@@ -50,6 +56,49 @@ export function QueuePanel({
     if (tab.id === "archive" || isSearchActive) return 0;
     return tasksForTab(tab.id).filter((t) => t.status === "completed").length;
   }, [tab.id, isSearchActive, tasksForTab]);
+
+  const newCaptureCount = useMemo(
+    () => (isInboxTab ? countRecentlyCaptured(queueTasks) : 0),
+    [isInboxTab, queueTasks],
+  );
+
+  const selectableInboxIds = useMemo(
+    () =>
+      queueTasks.filter((task) => task.status !== "cleared").map((task) => task.id),
+    [queueTasks],
+  );
+
+  function toggleBatchSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function startBatchMode() {
+    setBatchMode(true);
+    setSelectedIds(new Set());
+  }
+
+  function exitBatchMode() {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+  }
+
+  function selectAllInbox() {
+    setSelectedIds(new Set(selectableInboxIds));
+  }
+
+  async function handleBatchMove(queue: TaskQueue) {
+    const ids = [...selectedIds];
+    for (const id of ids) {
+      await moveTaskToQueue(id, queue);
+    }
+    exitBatchMode();
+    onTaskMoved?.(queue);
+  }
 
   const defaultQueue: TaskQueue =
     tab.id === "archive" ? "inbox" : (tab.id as TaskQueue);
@@ -171,6 +220,13 @@ export function QueuePanel({
           </div>
         )}
 
+        {isInboxTab && !batchMode && queueTasks.length > 0 ? (
+          <InboxTriageHint
+            newCount={newCaptureCount}
+            onStartSelect={startBatchMode}
+          />
+        ) : null}
+
         <TaskList
           tasks={queueTasks}
           allTasks={tasks}
@@ -178,12 +234,18 @@ export function QueuePanel({
           emphasis={listEmphasis}
           showQueueBadge={isSearchActive}
           allowSubtasks={!isSearchActive && tab.id !== "archive"}
+          highlightNew={isInboxTab}
+          batchSelectionMode={isInboxTab && batchMode}
+          selectedBatchIds={selectedIds}
+          onBatchSelectToggle={toggleBatchSelect}
           emptyMessage={
             isSearchActive
               ? "No matching tasks."
               : tab.id === "archive"
                 ? "No archived tasks."
-                : "No tasks yet — add one above."
+                : tab.id === "inbox"
+                  ? "Nothing in inbox — capture with Action Button or add below."
+                  : "No tasks yet — add one above."
           }
           onToggle={toggleComplete}
           onEdit={selectTask}
@@ -197,6 +259,16 @@ export function QueuePanel({
           onClearDueDate={handleClearDueDate}
           subtasksFor={subtasksFor}
         />
+
+        {isInboxTab && batchMode ? (
+          <InboxBatchBar
+            selectedCount={selectedIds.size}
+            totalCount={selectableInboxIds.length}
+            onCancel={exitBatchMode}
+            onSelectAll={selectAllInbox}
+            onMove={handleBatchMove}
+          />
+        ) : null}
       </div>
     </div>
   );

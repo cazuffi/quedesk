@@ -1,5 +1,15 @@
 import { getSupabase } from "./supabase";
 
+export function describeError(error: unknown, fallback: string): string {
+  if (error && typeof error === "object") {
+    const record = error as { message?: string; details?: string; hint?: string };
+    const parts = [record.message, record.details, record.hint].filter(Boolean);
+    if (parts.length > 0) return parts.join(" — ");
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
 export interface CaptureTokenRecord {
   id: string;
   label: string;
@@ -46,9 +56,9 @@ export async function createCaptureToken(
   const { data, error } = await sb.rpc("create_capture_token", {
     p_label: label,
   });
-  if (error) throw error;
+  if (error) throw new Error(describeError(error, "Could not create capture token"));
   if (typeof data !== "string" || !data) {
-    throw new Error("Could not create capture token");
+    throw new Error("Could not create capture token (empty response)");
   }
   return data;
 }

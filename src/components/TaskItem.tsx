@@ -25,6 +25,10 @@ interface TaskItemProps {
   emphasis?: ListEmphasis;
   isSurface?: boolean;
   isSelected?: boolean;
+  isNewCapture?: boolean;
+  batchSelectionMode?: boolean;
+  batchSelected?: boolean;
+  onBatchSelectToggle?: (id: string) => void;
   parentTitle?: string | null;
   parentTask?: Task | null;
   siblingProgress?: { done: number; total: number } | null;
@@ -47,6 +51,10 @@ export function TaskItem({
   emphasis = "default",
   isSurface = false,
   isSelected = false,
+  isNewCapture = false,
+  batchSelectionMode = false,
+  batchSelected = false,
+  onBatchSelectToggle,
   parentTitle,
   parentTask,
   siblingProgress,
@@ -67,7 +75,7 @@ export function TaskItem({
 
   const sortable = useSortable({
     id: taskDragId(task.id),
-    disabled: isCleared || embedded || Boolean(dragHandleProps),
+    disabled: isCleared || embedded || Boolean(dragHandleProps) || batchSelectionMode,
   });
 
   const drag = dragHandleProps ?? {
@@ -94,7 +102,17 @@ export function TaskItem({
 
   const mainRow = (
     <>
-      {!isCleared && !embedded && !dragHandleProps && (
+      {batchSelectionMode && !isCleared ? (
+        <input
+          type="checkbox"
+          checked={batchSelected}
+          onChange={() => onBatchSelectToggle?.(task.id)}
+          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)] sm:mt-1 sm:h-4 sm:w-4"
+          aria-label={batchSelected ? "Deselect task" : "Select task"}
+        />
+      ) : null}
+
+      {!isCleared && !embedded && !dragHandleProps && !batchSelectionMode && (
         <button
           type="button"
           className="mt-0.5 hidden cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing sm:block"
@@ -106,7 +124,7 @@ export function TaskItem({
         </button>
       )}
 
-      {!isCleared ? (
+      {!isCleared && !batchSelectionMode ? (
         <input
           type="checkbox"
           checked={completed}
@@ -151,6 +169,16 @@ export function TaskItem({
           >
             {task.title}
           </button>
+
+          {isNewCapture && !completed && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
+                aria-hidden
+              />
+              New
+            </span>
+          )}
 
           {progressLabel && (
             <span className="rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-accent)]">
@@ -279,7 +307,7 @@ export function TaskItem({
       </div>
       ) : null}
 
-      {touchLayout && !hideOverflowMenu ? (
+      {touchLayout && !hideOverflowMenu && !batchSelectionMode ? (
         <OverflowMenu items={mobileMenuItems} />
       ) : null}
     </>
@@ -306,9 +334,13 @@ export function TaskItem({
         isSurface ? "border-l-2 border-l-[var(--color-accent)]" : "",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
-          : isSurface
-            ? "border-[var(--color-border)] border-l-[var(--color-accent)]"
-            : "border-[var(--color-border)]",
+          : batchSelected
+            ? "border-[var(--color-accent)]/50 ring-2 ring-[var(--color-accent)]/25"
+            : isNewCapture && !completed && !isCleared
+              ? "border-[var(--color-accent)]/25"
+              : isSurface
+                ? "border-[var(--color-border)] border-l-[var(--color-accent)]"
+                : "border-[var(--color-border)]",
       ].join(" ")}
     >
       <div className="flex items-start gap-2">{mainRow}</div>

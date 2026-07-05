@@ -13,6 +13,10 @@ interface TaskListProps {
   emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
+  highlightNew?: boolean;
+  batchSelectionMode?: boolean;
+  selectedBatchIds?: Set<string>;
+  onBatchSelectToggle?: (id: string) => void;
   emptyMessage?: string;
   onToggle: (task: Task) => void;
   onEdit: (task: Task) => void;
@@ -34,6 +38,10 @@ export function TaskList({
   emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
+  highlightNew = false,
+  batchSelectionMode = false,
+  selectedBatchIds,
+  onBatchSelectToggle,
   emptyMessage = "No tasks yet — add one above.",
   onToggle,
   onEdit,
@@ -73,6 +81,10 @@ export function TaskList({
               emphasis={emphasis}
               showQueueBadge={showQueueBadge}
               allowSubtasks={allowSubtasks}
+              highlightNew={highlightNew}
+              batchSelectionMode={batchSelectionMode}
+              batchSelected={selectedBatchIds?.has(task.id) ?? false}
+              onBatchSelectToggle={onBatchSelectToggle}
               onToggle={onToggle}
               onEdit={onEdit}
               onClear={onClear}

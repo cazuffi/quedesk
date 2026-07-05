@@ -1,4 +1,4 @@
--- Personal capture tokens for headless quick-add (e.g. iPhone Action Button → Shortcuts)
+/* QueDesk: personal capture tokens for headless quick-add (Shortcuts / Action Button) */
 
 create extension if not exists pgcrypto;
 
@@ -32,7 +32,7 @@ create or replace function create_capture_token(p_label text default 'Action But
 returns text
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_user_id uuid;

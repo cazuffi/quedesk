@@ -8,6 +8,7 @@ import { TaskItem } from "./TaskItem";
 import { OverflowMenu } from "./OverflowMenu";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
+import { isRecentlyCaptured } from "../lib/recentCapture";
 
 interface TaskCardProps {
   task: Task;
@@ -18,6 +19,10 @@ interface TaskCardProps {
   emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
+  highlightNew?: boolean;
+  batchSelectionMode?: boolean;
+  batchSelected?: boolean;
+  onBatchSelectToggle?: (id: string) => void;
   onToggle: (task: Task) => void;
   onEdit: (task: Task) => void;
   onClear: (id: string) => void;
@@ -39,6 +44,10 @@ export function TaskCard({
   emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
+  highlightNew = false,
+  batchSelectionMode = false,
+  batchSelected = false,
+  onBatchSelectToggle,
   onToggle,
   onEdit,
   onClear,
@@ -63,6 +72,8 @@ export function TaskCard({
     }
   }, []);
 
+  const isNewCapture = highlightNew && isRecentlyCaptured(task);
+
   const {
     attributes,
     listeners,
@@ -72,7 +83,7 @@ export function TaskCard({
     isDragging,
   } = useSortable({
     id: taskDragId(task.id),
-    disabled: task.status === "cleared",
+    disabled: task.status === "cleared" || batchSelectionMode,
   });
 
   const style = {
@@ -95,6 +106,10 @@ export function TaskCard({
         showQueueBadge={showQueueBadge}
         isSurface={isSurface}
         isSelected={isSelected}
+        isNewCapture={isNewCapture}
+        batchSelectionMode={batchSelectionMode}
+        batchSelected={batchSelected}
+        onBatchSelectToggle={onBatchSelectToggle}
         onToggle={onToggle}
         onEdit={onEdit}
         onClear={onClear}
@@ -127,9 +142,13 @@ export function TaskCard({
           : "",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
-          : !isToday || task.status !== "active"
-            ? "border-[var(--color-border)]"
-            : "",
+          : batchSelected
+            ? "border-[var(--color-accent)]/50 ring-2 ring-[var(--color-accent)]/25"
+            : isNewCapture && task.status === "active"
+              ? "border-[var(--color-accent)]/25"
+              : !isToday || task.status !== "active"
+                ? "border-[var(--color-border)]"
+                : "",
       ].join(" ")}
     >
       <div className="flex items-start gap-2">
@@ -139,10 +158,12 @@ export function TaskCard({
           aria-label="Drag to reorder or drop on a tab"
           {...attributes}
           {...listeners}
+          style={batchSelectionMode ? { visibility: "hidden" } : undefined}
         >
           ⠿
         </button>
 
+        {!batchSelectionMode ? (
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
@@ -165,6 +186,7 @@ export function TaskCard({
             {hasSubtasks ? `${progress.done}/${progress.total}` : ""}
           </span>
         </button>
+        ) : null}
 
         <TaskItem
           embedded
@@ -172,6 +194,10 @@ export function TaskCard({
           hideOverflowMenu
           task={task}
           isSelected={isSelected}
+          isNewCapture={isNewCapture}
+          batchSelectionMode={batchSelectionMode}
+          batchSelected={batchSelected}
+          onBatchSelectToggle={onBatchSelectToggle}
           showQueueBadge={showQueueBadge}
           progressLabel={
             hasSubtasks ? `${progress.done}/${progress.total}` : undefined
@@ -184,7 +210,7 @@ export function TaskCard({
           onClearDueDate={onClearDueDate}
         />
 
-        {touchLayout ? (
+        {touchLayout && !batchSelectionMode ? (
           <OverflowMenu items={cardOverflowItems} />
         ) : null}
       </div>

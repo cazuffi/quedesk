@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createCaptureToken,
+  describeError,
   getCaptureEndpointUrl,
   listCaptureTokens,
   revokeCaptureToken,
@@ -38,7 +39,7 @@ export function CaptureSettingsPanel({ onClose }: CaptureSettingsPanelProps) {
     try {
       setTokens(await listCaptureTokens());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load tokens");
+      setError(describeError(e, "Could not load tokens"));
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,7 @@ export function CaptureSettingsPanel({ onClose }: CaptureSettingsPanelProps) {
       setNewToken(token);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create token");
+      setError(describeError(e, "Could not create token"));
     } finally {
       setBusy(false);
     }
@@ -77,7 +78,7 @@ export function CaptureSettingsPanel({ onClose }: CaptureSettingsPanelProps) {
       await revokeCaptureToken(id);
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not revoke token");
+      setError(describeError(e, "Could not revoke token"));
     } finally {
       setBusy(false);
     }
@@ -91,7 +92,7 @@ export function CaptureSettingsPanel({ onClose }: CaptureSettingsPanelProps) {
       await testCaptureToken(newToken, "Test capture from QueDesk");
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Test failed");
+      setError(describeError(e, "Test failed"));
     } finally {
       setBusy(false);
     }

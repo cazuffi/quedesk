@@ -134,6 +134,44 @@ export function TaskCard({
     { isSurface: false },
   );
 
+  const subtaskExpandButton = (mobile: boolean) => (
+    <button
+      type="button"
+      onClick={() => setExpanded((value) => !value)}
+      className={[
+        "shrink-0 rounded-lg text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)] active:bg-[var(--color-accent-soft)] active:text-[var(--color-accent)]",
+        mobile
+          ? "flex h-9 w-9 items-center justify-center text-sm"
+          : "mt-0.5 flex items-center gap-1 px-1.5 py-0.5 text-[11px]",
+      ].join(" ")}
+      aria-expanded={expanded}
+      aria-label={expanded ? "Collapse subtasks" : "Expand subtasks"}
+    >
+      <span
+        className="inline-block transition-transform"
+        style={{ transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
+        aria-hidden
+      >
+        ▸
+      </span>
+      {!mobile ? (
+        <>
+          <span className="hidden sm:inline">
+            Subtasks
+            {hasSubtasks ? ` ${progress.done}/${progress.total}` : ""}
+          </span>
+          <span className="sm:hidden">
+            {hasSubtasks ? `${progress.done}/${progress.total}` : ""}
+          </span>
+        </>
+      ) : hasSubtasks ? (
+        <span className="sr-only">
+          {progress.done}/{progress.total} subtasks
+        </span>
+      ) : null}
+    </button>
+  );
+
   return (
     <div
       ref={setNodeRef}
@@ -162,30 +200,7 @@ export function TaskCard({
           <TaskDragHandle attributes={attributes} listeners={listeners} />
         ) : null}
 
-        {!batchSelectionMode ? (
-        <button
-          type="button"
-          onClick={() => setExpanded((value) => !value)}
-          className="mt-0.5 flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]"
-          aria-expanded={expanded}
-          aria-label={expanded ? "Collapse subtasks" : "Expand subtasks"}
-        >
-          <span
-            className="inline-block transition-transform"
-            style={{ transform: expanded ? "rotate(90deg)" : "rotate(0deg)" }}
-            aria-hidden
-          >
-            ▸
-          </span>
-          <span className="hidden sm:inline">
-            Subtasks
-            {hasSubtasks ? ` ${progress.done}/${progress.total}` : ""}
-          </span>
-          <span className="sm:hidden">
-            {hasSubtasks ? `${progress.done}/${progress.total}` : ""}
-          </span>
-        </button>
-        ) : null}
+        {!batchSelectionMode && !touchLayout ? subtaskExpandButton(false) : null}
 
         <TaskItem
           embedded
@@ -210,7 +225,10 @@ export function TaskCard({
         />
 
         {touchLayout && !batchSelectionMode ? (
-          <OverflowMenu items={cardOverflowItems} />
+          <div className="flex shrink-0 flex-col items-end gap-0.5">
+            <OverflowMenu items={cardOverflowItems} />
+            {subtaskExpandButton(true)}
+          </div>
         ) : null}
       </div>
 

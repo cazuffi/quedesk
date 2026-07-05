@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parentProgress, siblingProgressFor, resolveParentTask } from "../lib/taskTree";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
@@ -67,13 +67,16 @@ export function TaskCard({
   const isSurface = task.surfaceOfId !== null;
   const progress = parentProgress(subtasks);
   const hasSubtasks = subtasks.length > 0;
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(hasSubtasks);
+  const hadSubtasksRef = useRef(hasSubtasks);
 
   useEffect(() => {
-    if (window.matchMedia("(max-width: 1279px)").matches) {
+    const hasSubtasksNow = subtasks.length > 0;
+    if (!hadSubtasksRef.current && hasSubtasksNow) {
       setExpanded(true);
     }
-  }, []);
+    hadSubtasksRef.current = hasSubtasksNow;
+  }, [subtasks.length]);
 
   const isNewCapture = highlightNew && isRecentlyCaptured(task);
 

@@ -97,6 +97,20 @@ body {
   touch-action: pan-x;
 }
 
+.drag-handle {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+html.is-dragging .app-scroll-y {
+  overflow: hidden;
+  touch-action: none;
+}
+
+html.is-dragging body {
+  touch-action: none;
+}
+
 @media (max-width: 639px) {
   input,
   textarea,

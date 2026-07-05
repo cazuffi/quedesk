@@ -6,6 +6,7 @@ import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
 import { OverflowMenu } from "./OverflowMenu";
+import { TaskDragHandle } from "./TaskDragHandle";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 import { isRecentlyCaptured } from "../lib/recentCapture";
@@ -155,15 +156,7 @@ export function TaskCard({
     >
       <div className="flex items-start gap-2">
         {!batchSelectionMode && allowReorder ? (
-          <button
-            type="button"
-            className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
-            aria-label="Drag to reorder or drop on a tab"
-            {...attributes}
-            {...listeners}
-          >
-            ⠿
-          </button>
+          <TaskDragHandle attributes={attributes} listeners={listeners} />
         ) : null}
 
         {!batchSelectionMode ? (

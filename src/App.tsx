@@ -1,14 +1,11 @@
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import { useTaskDragSensors } from "./hooks/useTaskDragSensors";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FocusView } from "./components/FocusView";
@@ -89,12 +86,7 @@ function AppContent() {
     [activeTab],
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 6 },
-    }),
-  );
+  const sensors = useTaskDragSensors();
 
   useEffect(() => {
     let cancelled = false;
@@ -148,12 +140,14 @@ function AppContent() {
     if (!taskId) return;
     const task = tasks.find((t) => t.id === taskId) ?? null;
     setDraggingTask(task);
+    document.documentElement.classList.add("is-dragging");
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setDraggingTask(null);
     setDropTargetTab(null);
+    document.documentElement.classList.remove("is-dragging");
 
     if (!over) return;
 
@@ -241,6 +235,7 @@ function AppContent() {
       onDragCancel={() => {
         setDraggingTask(null);
         setDropTargetTab(null);
+        document.documentElement.classList.remove("is-dragging");
       }}
     >
       <div className="app-shell flex h-full min-h-0 flex-col overflow-hidden bg-[var(--color-surface)]">

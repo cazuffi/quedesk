@@ -8,6 +8,7 @@ import { OverflowMenu } from "./OverflowMenu";
 import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { SourceLinkButton } from "./SourceLinkButton";
+import { TaskDragHandle } from "./TaskDragHandle";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 
@@ -113,15 +114,10 @@ export function TaskItem({
       ) : null}
 
       {!isCleared && !embedded && !batchSelectionMode && (
-        <button
-          type="button"
-          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
-          aria-label="Drag to reorder or drop on a tab"
-          {...(dragHandleProps ? dragHandleProps.attributes : drag.attributes)}
-          {...(dragHandleProps ? dragHandleProps.listeners : drag.listeners)}
-        >
-          ⠿
-        </button>
+        <TaskDragHandle
+          attributes={dragHandleProps ? dragHandleProps.attributes : drag.attributes}
+          listeners={dragHandleProps ? dragHandleProps.listeners : drag.listeners}
+        />
       )}
 
       {!isCleared && !batchSelectionMode ? (

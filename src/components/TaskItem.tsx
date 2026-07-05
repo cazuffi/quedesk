@@ -138,19 +138,6 @@ export function TaskItem({
       ) : null}
 
       <div className="min-w-0 flex-1">
-        {isSurface && parentTitle && (
-          <div className="mb-0.5 flex items-center gap-1 text-[10px]">
-            <button
-              type="button"
-              onClick={() => parentTask && onEdit(parentTask)}
-              className="truncate text-[var(--color-accent)] transition-colors hover:underline"
-            >
-              {parentTitle}
-            </button>
-            <span className="text-[var(--color-text-muted)]">›</span>
-          </div>
-        )}
-
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
@@ -169,6 +156,35 @@ export function TaskItem({
           >
             {task.title}
           </button>
+
+          {isSurface && (
+            <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
+              <span className="shrink-0 font-medium">Pinned from</span>
+              {parentTitle ? (
+                parentTask ? (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(parentTask)}
+                    className="max-w-[10rem] truncate font-medium text-[var(--color-accent)] transition-colors hover:underline sm:max-w-[14rem]"
+                    title={parentTitle}
+                  >
+                    {parentTitle}
+                  </button>
+                ) : (
+                  <span
+                    className="max-w-[10rem] truncate font-medium text-[var(--color-text)] sm:max-w-[14rem]"
+                    title={parentTitle}
+                  >
+                    {parentTitle}
+                  </span>
+                )
+              ) : (
+                <span className="font-medium text-[var(--color-text-muted)]">
+                  parent
+                </span>
+              )}
+            </span>
+          )}
 
           {isNewCapture && !completed && (
             <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-accent)]">

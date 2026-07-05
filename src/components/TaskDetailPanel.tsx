@@ -51,8 +51,8 @@ export function TaskDetailPanel({
   const [dirty, setDirty] = useState(false);
   const { confirm } = useConfirm();
 
-  const parentTitle = resolveParentTitle(allTasks, task);
   const isSurface = task.surfaceOfId !== null;
+  const parentTitle = resolveParentTitle(allTasks, task);
   const completed = task.status === "completed";
   const overdue = isOverdue(task);
 
@@ -125,8 +125,22 @@ export function TaskDetailPanel({
           </p>
           <p className="truncate text-xs text-[var(--color-text-muted)]">
             {queueTabLabel(task.queue)}
-            {parentTitle ? ` · ↗ ${parentTitle}` : ""}
           </p>
+          {isSurface ? (
+            <span className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] text-[var(--color-text-muted)]">
+              <span className="shrink-0 font-medium">Pinned from</span>
+              {parentTitle ? (
+                <span
+                  className="max-w-[12rem] truncate font-medium text-[var(--color-text)]"
+                  title={parentTitle}
+                >
+                  {parentTitle}
+                </span>
+              ) : (
+                <span className="font-medium">parent</span>
+              )}
+            </span>
+          ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
           {layout === "side" && (

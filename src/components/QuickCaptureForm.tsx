@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { useTasks } from "../contexts/TasksContext";
 import { hideCurrentWindow, listenForWindowBlur } from "../lib/tasksEvents";
-import { dismissCaptureWindow, isCapturePopout } from "../lib/captureWindow";
-import { isDesktop } from "../lib/platform";
+import {
+  dismissCaptureWindow,
+  isCapturePopout,
+  openCapturePopoutAtWidth,
+} from "../lib/captureWindow";
+import {
+  CAPTURE_DEFAULT_POPOUT_WIDTH,
+  CAPTURE_MIN_WIDTH,
+} from "../lib/captureStorage";
+import { isUltraCompact } from "../lib/focusStorage";
+import { useFocusWidthBand } from "../hooks/useFocusWidthBand";
+import { isDesktop, isWeb } from "../lib/platform";
 
 export type QuickCaptureVariant = "embedded" | "modal" | "standalone";
 
@@ -36,9 +46,13 @@ export function QuickCaptureForm({
   const [pasteHint, setPasteHint] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const linkRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLFormElement>(null);
 
   const standalone = variant === "standalone";
   const desktopWidget = variant === "embedded" && isDesktop();
+  const band = useFocusWidthBand(panelRef);
+  const slim = isUltraCompact(band);
+  const ultra = band === "ultra";
 
   const handleDismiss = useCallback(() => {
     if (onDismiss) {
@@ -115,8 +129,8 @@ export function QuickCaptureForm({
       onSuccess?.();
       if (desktopWidget) {
         await hideCurrentWindow();
-      } else if (standalone || isCapturePopout()) {
-        dismissCaptureWindow();
+      } else if (standalone) {
+        titleRef.current?.focus();
       } else {
         titleRef.current?.focus();
       }
@@ -125,22 +139,38 @@ export function QuickCaptureForm({
     }
   }
 
-  const pad = standalone ? "p-3" : variant === "modal" ? "" : "px-3 py-2";
+  const pad = standalone
+    ? ultra
+      ? "p-2"
+      : slim
+        ? "p-2.5"
+        : "p-3"
+    : variant === "modal"
+      ? ""
+      : "px-3 py-2";
 
   return (
     <form
+      ref={panelRef}
       onSubmit={handleSubmit}
       className={[
-        "flex flex-col gap-2 bg-[var(--color-surface)]",
+        "flex w-full min-w-0 flex-col gap-2 bg-[var(--color-surface)]",
         standalone ? "h-full min-h-0 justify-center" : "",
         pad,
       ].join(" ")}
+      data-capture-band={band}
     >
       {standalone ? (
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
-            Capture to Inbox
-          </p>
+        <div className="mb-0.5 flex items-center justify-between gap-2">
+          {!ultra ? (
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
+              Capture
+            </p>
+          ) : (
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
+              Inbox
+            </p>
+          )}
           <button
             type="button"
             onClick={handleDismiss}
@@ -151,20 +181,26 @@ export function QuickCaptureForm({
         </div>
       ) : null}
 
-      <div className="flex gap-2">
+      <div className={ultra ? "flex flex-col gap-1.5" : "flex gap-2"}>
         <input
           ref={titleRef}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Quick capture to Inbox…"
+          placeholder={ultra ? "Capture…" : "Quick capture to Inbox…"}
           disabled={busy}
-          className="min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-2 text-sm outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60"
+          className={[
+            "min-w-0 flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60",
+            ultra ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm",
+          ].join(" ")}
         />
         <button
           type="submit"
           disabled={busy || !title.trim()}
-          className="shrink-0 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] disabled:opacity-40"
+          className={[
+            "shrink-0 rounded-xl bg-[var(--color-accent)] font-medium text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] disabled:opacity-40",
+            ultra ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm",
+          ].join(" ")}
         >
           Add
         </button>
@@ -181,21 +217,25 @@ export function QuickCaptureForm({
             });
           }}
           className={[
-            "rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-all",
+            "rounded-lg border font-medium transition-all",
+            ultra ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]",
             showLink || sourceLink.trim()
               ? "border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
               : "border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
           ].join(" ")}
         >
-          Link
+          {ultra ? "↗" : "Link"}
         </button>
         <button
           type="button"
           onClick={() => void handlePasteLink()}
-          className="rounded-lg border border-[var(--color-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-muted)] transition-all hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+          className={[
+            "rounded-lg border border-[var(--color-border)] font-medium text-[var(--color-text-muted)] transition-all hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
+            ultra ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1 text-[11px]",
+          ].join(" ")}
           title="Paste a Teams or Outlook link from clipboard"
         >
-          Paste link
+          {ultra ? "⎘" : "Paste link"}
         </button>
         {!standalone && variant === "modal" ? (
           <span className="ml-auto text-[10px] text-[var(--color-text-muted)]">
@@ -218,11 +258,61 @@ export function QuickCaptureForm({
           type="text"
           value={sourceLink}
           onChange={(e) => setSourceLink(e.target.value)}
-          placeholder="Source link — Teams meeting, Outlook, etc."
+          placeholder={ultra ? "Source URL…" : "Source link — Teams, Outlook…"}
           disabled={busy}
-          className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 py-1.5 text-xs outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60"
+          className={[
+            "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] disabled:opacity-60",
+            ultra ? "px-2 py-1 text-[10px]" : "px-3 py-1.5 text-xs",
+          ].join(" ")}
         />
       )}
+
+      {standalone && isWeb() ? (
+        <>
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            <button
+              type="button"
+              onClick={() => openCapturePopoutAtWidth(180)}
+              className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+              title="Open pop-out at 180px width"
+            >
+              180
+            </button>
+            <button
+              type="button"
+              onClick={() => openCapturePopoutAtWidth(220)}
+              className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+              title="Open pop-out at 220px width"
+            >
+              220
+            </button>
+            <button
+              type="button"
+              onClick={() => openCapturePopoutAtWidth(CAPTURE_DEFAULT_POPOUT_WIDTH)}
+              className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+              title="Open pop-out at 240px width"
+            >
+              240
+            </button>
+            {!slim ? (
+              <button
+                type="button"
+                onClick={() => openCapturePopoutAtWidth(320)}
+                className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+                title="Open pop-out at 320px width"
+              >
+                320
+              </button>
+            ) : null}
+          </div>
+          {!ultra ? (
+            <p className="text-[10px] leading-relaxed text-[var(--color-text-muted)]">
+              Drag the window edge to resize — layout adapts down to {CAPTURE_MIN_WIDTH}px for
+              FancyZones.
+            </p>
+          ) : null}
+        </>
+      ) : null}
     </form>
   );
 }

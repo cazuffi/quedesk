@@ -5,6 +5,7 @@ import { useUi } from "../contexts/UiContext";
 import { isWeb } from "../lib/platform";
 import {
   captureAppUrl,
+  openCapturePopout,
 } from "../lib/captureWindow";
 import { focusAppUrl, openFocusPopout } from "../lib/focusWindow";
 import { WEB_APP_VERSION } from "../lib/appVersion";
@@ -104,6 +105,14 @@ export function Header() {
                   title="Capture to Inbox (Ctrl+Shift+N)"
                 >
                   Capture
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openCapturePopout()}
+                  className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+                  title="Open capture in a side window"
+                >
+                  Pop out
                 </button>
                 <a
                   href={captureAppUrl()}

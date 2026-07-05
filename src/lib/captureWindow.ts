@@ -1,3 +1,8 @@
+import {
+  readCapturePopoutWidth,
+  writeCapturePopoutWidth,
+} from "./captureStorage";
+
 export function isCaptureRoute(): boolean {
   if (typeof window === "undefined") return false;
   const path = window.location.pathname.replace(/\/+$/, "");
@@ -21,12 +26,19 @@ export function captureAppUrl(options?: { popout?: boolean }): string {
   return url.toString();
 }
 
-export function openCapturePopout(): Window | null {
+export function openCapturePopout(
+  width = readCapturePopoutWidth(),
+): Window | null {
+  writeCapturePopoutWidth(width);
   return window.open(
     captureAppUrl({ popout: true }),
     "quedesk-capture",
-    "popup=yes,width=420,height=220,noopener,noreferrer,scrollbars=no",
+    `popup=yes,width=${width},height=200,noopener,noreferrer,scrollbars=no`,
   );
+}
+
+export function openCapturePopoutAtWidth(width: number): Window | null {
+  return openCapturePopout(width);
 }
 
 export function dismissCaptureWindow(): void {

@@ -1,3 +1,8 @@
+import {
+  readFocusPopoutWidth,
+  writeFocusPopoutWidth,
+} from "./focusStorage";
+
 export function isFocusRoute(): boolean {
   if (typeof window === "undefined") return false;
   const path = window.location.pathname.replace(/\/+$/, "");
@@ -26,10 +31,15 @@ export function mainAppUrl(): string {
   return `${window.location.origin}${base}`;
 }
 
-export function openFocusPopout(): Window | null {
+export function openFocusPopout(width = readFocusPopoutWidth()): Window | null {
+  writeFocusPopoutWidth(width);
   return window.open(
     focusAppUrl({ popout: true }),
     "quedesk-focus",
-    "popup=yes,width=380,height=820,noopener,noreferrer",
+    `popup=yes,width=${width},height=820,noopener,noreferrer,scrollbars=no`,
   );
+}
+
+export function openFocusPopoutAtWidth(width: number): Window | null {
+  return openFocusPopout(width);
 }

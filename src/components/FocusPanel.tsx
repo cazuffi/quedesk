@@ -4,13 +4,22 @@ import { useUi } from "../contexts/UiContext";
 import { useFocusKeyboard } from "../hooks/useFocusKeyboard";
 import {
   cycleFocusDock,
+  cycleFocusDensity,
+  focusDensityLabel,
+  isUltraCompact,
   readFocusCollapsed,
+  readFocusDensity,
   readFocusDock,
   readFocusNowTaskId,
+  resolveFocusBand,
   resolveNowTask,
   writeFocusCollapsed,
+  writeFocusDensity,
   writeFocusDock,
   writeFocusNowTaskId,
+  FOCUS_DEFAULT_POPOUT_WIDTH,
+  FOCUS_MIN_WIDTH,
+  type FocusDensity,
   type FocusDock,
 } from "../lib/focusStorage";
 import {
@@ -18,7 +27,9 @@ import {
   isFocusPopout,
   mainAppUrl,
   openFocusPopout,
+  openFocusPopoutAtWidth,
 } from "../lib/focusWindow";
+import { useFocusWidthBand } from "../hooks/useFocusWidthBand";
 import { computeTodayStats, formatTodaySummary } from "../lib/todayStats";
 import { isWeb } from "../lib/platform";
 import type { Task } from "../types";
@@ -53,9 +64,15 @@ export function FocusPanel({
   const [quickAdd, setQuickAdd] = useState("");
   const [adding, setAdding] = useState(false);
   const quickAddRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const standalone = variant === "standalone";
   const popout = isFocusPopout();
+  const [density, setDensity] = useState<FocusDensity>(() => readFocusDensity());
+  const measuredBand = useFocusWidthBand(panelRef);
+  const band = resolveFocusBand(density, measuredBand);
+  const slim = isUltraCompact(band);
+  const ultra = band === "ultra";
 
   const todayTasks = useMemo(() => {
     const items = tasksForTab("today");
@@ -124,6 +141,14 @@ export function FocusPanel({
     else setInternalDock(next);
   }, [dock, onDockChange]);
 
+  const handleCycleDensity = useCallback(() => {
+    setDensity((current) => {
+      const next = cycleFocusDensity(current);
+      writeFocusDensity(next);
+      return next;
+    });
+  }, []);
+
   const handleExit = useCallback(() => {
     if (onExit) {
       onExit();
@@ -174,32 +199,51 @@ export function FocusPanel({
   if (collapsed) {
     return (
       <div
+        ref={panelRef}
         className={[
-          "flex h-full flex-col bg-[var(--color-surface)]",
+          "flex h-full w-full min-w-0 flex-col bg-[var(--color-surface)]",
           standalone ? "" : "rounded-2xl border border-[var(--color-border)] shadow-lg shadow-black/5",
         ].join(" ")}
+        data-focus-band={band}
       >
         <button
           type="button"
           onClick={handleToggleCollapsed}
-          className="flex min-h-0 flex-1 items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-raised)]"
+          className={[
+            "flex min-h-0 flex-1 items-center text-left transition-colors hover:bg-[var(--color-surface-raised)]",
+            ultra ? "gap-2 px-2 py-2" : "gap-3 px-4 py-3",
+          ].join(" ")}
           title="Expand focus panel (C)"
         >
-          <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--color-accent)] text-white shadow-sm">
+          <div
+            className={[
+              "flex shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--color-accent)] text-white shadow-sm",
+              ultra ? "h-8 w-8" : "h-9 w-9",
+            ].join(" ")}
+          >
             <span className="text-sm font-bold leading-none">
               {stats.active || "✓"}
             </span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
-              Focus
-            </p>
-            <p className="truncate text-sm font-medium text-[var(--color-text)]">
+            {!ultra ? (
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
+                Focus
+              </p>
+            ) : null}
+            <p
+              className={[
+                "truncate font-medium text-[var(--color-text)]",
+                ultra ? "text-xs" : "text-sm",
+              ].join(" ")}
+            >
               {nextTaskTitle}
             </p>
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              {formatTodaySummary(stats)}
-            </p>
+            {!ultra ? (
+              <p className="text-[11px] text-[var(--color-text-muted)]">
+                {formatTodaySummary(stats)}
+              </p>
+            ) : null}
           </div>
           <span className="shrink-0 text-xs text-[var(--color-text-muted)]">
             ▲
@@ -209,24 +253,39 @@ export function FocusPanel({
     );
   }
 
+  const headerPad = ultra ? "px-2 py-2" : slim ? "px-2.5 py-2" : "px-3.5 py-2.5";
+  const bodyPad = ultra ? "px-2 py-2" : slim ? "px-2.5 py-2.5" : "px-3 py-3";
+
   return (
     <div
+      ref={panelRef}
       className={[
-        "flex h-full min-h-0 flex-col bg-[var(--color-surface)]",
+        "flex h-full w-full min-w-0 flex-col bg-[var(--color-surface)]",
         standalone ? "" : "rounded-2xl border border-[var(--color-border)] shadow-lg shadow-black/5",
       ].join(" ")}
       data-focus-dock={dock}
+      data-focus-band={band}
     >
-      <header className="shrink-0 border-b border-[var(--color-border)]/80 px-3.5 py-2.5">
+      <header className={["shrink-0 border-b border-[var(--color-border)]/80", headerPad].join(" ")}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
-              Focus
-            </p>
-            <h2 className="text-sm font-semibold tracking-tight">Today</h2>
-            <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
-              {loading ? "Loading…" : formatTodaySummary(stats)}
-            </p>
+            {!ultra ? (
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-accent)]">
+                Focus
+              </p>
+            ) : null}
+            {!slim ? (
+              <h2 className="text-sm font-semibold tracking-tight">Today</h2>
+            ) : null}
+            {!ultra ? (
+              <p className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">
+                {loading ? "Loading…" : formatTodaySummary(stats)}
+              </p>
+            ) : (
+              <p className="text-[11px] font-medium text-[var(--color-text-muted)]">
+                {loading ? "…" : `${stats.active} left`}
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {!standalone ? (
@@ -253,29 +312,58 @@ export function FocusPanel({
         <div className="mt-2 flex flex-wrap gap-1">
           <button
             type="button"
+            onClick={handleCycleDensity}
+            className="rounded-md bg-[var(--color-surface-raised)] px-2 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+            title="Cycle layout density for narrow zones"
+          >
+            {focusDensityLabel(density)}
+          </button>
+          <button
+            type="button"
             onClick={toggleHideCompleted}
             className="rounded-md bg-[var(--color-surface-raised)] px-2 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
           >
-            {hideCompleted ? "Show done" : "Hide done"}
+            {ultra ? (hideCompleted ? "✓" : "✓*") : hideCompleted ? "Show done" : "Hide done"}
           </button>
           {isWeb() && !standalone && !popout ? (
             <button
               type="button"
-              onClick={openFocusPopout}
+              onClick={() => openFocusPopout()}
               className="rounded-md bg-[var(--color-surface-raised)] px-2 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
               title="Open focus in a side window"
             >
               Pop out
             </button>
           ) : null}
-          {standalone && !popout ? (
-            <button
-              type="button"
-              onClick={openFocusPopout}
-              className="rounded-md bg-[var(--color-surface-raised)] px-2 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
-            >
-              Pop out
-            </button>
+          {isWeb() && (standalone || popout) ? (
+            <>
+              <button
+                type="button"
+                onClick={() => openFocusPopoutAtWidth(220)}
+                className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+                title="Open pop-out at 220px width"
+              >
+                220
+              </button>
+              <button
+                type="button"
+                onClick={() => openFocusPopoutAtWidth(FOCUS_DEFAULT_POPOUT_WIDTH)}
+                className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+                title="Open pop-out at 260px width"
+              >
+                260
+              </button>
+              {!slim ? (
+                <button
+                  type="button"
+                  onClick={() => openFocusPopoutAtWidth(320)}
+                  className="rounded-md bg-[var(--color-surface-raised)] px-1.5 py-1 text-[10px] font-medium text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent)]"
+                  title="Open pop-out at 320px width"
+                >
+                  320
+                </button>
+              ) : null}
+            </>
           ) : null}
           {!standalone && !popout ? (
             <a
@@ -297,10 +385,15 @@ export function FocusPanel({
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+      <div className={["min-h-0 flex-1 overflow-y-auto overflow-x-hidden", bodyPad].join(" ")}>
         {nowTask ? (
-          <div className="mb-3">
-            <FocusNowCard task={nowTask} onToggle={(task) => void handleToggle(task)} />
+          <div className={ultra ? "mb-2" : "mb-3"}>
+            <FocusNowCard
+              task={nowTask}
+              compact={slim}
+              ultra={ultra}
+              onToggle={(task) => void handleToggle(task)}
+            />
           </div>
         ) : null}
 
@@ -311,6 +404,8 @@ export function FocusPanel({
                 key={task.id}
                 task={task}
                 selected={index === selectedIndex}
+                compact={slim}
+                ultra={ultra}
                 onToggle={(item) => void handleToggle(item)}
                 onSetNow={handleSetNow}
               />
@@ -327,28 +422,53 @@ export function FocusPanel({
         )}
       </div>
 
-      <footer className="shrink-0 border-t border-[var(--color-border)]/80 px-3 py-2.5">
-        <form onSubmit={handleQuickAdd} className="flex gap-1.5 touch-manipulation">
+      <footer
+        className={[
+          "shrink-0 border-t border-[var(--color-border)]/80",
+          ultra ? "px-2 py-2" : "px-3 py-2.5",
+        ].join(" ")}
+      >
+        <form
+          onSubmit={handleQuickAdd}
+          className={[
+            "touch-manipulation",
+            ultra ? "flex flex-col gap-1.5" : "flex gap-1.5",
+          ].join(" ")}
+        >
           <input
             ref={quickAddRef}
             type="text"
             value={quickAdd}
             onChange={(event) => setQuickAdd(event.target.value)}
-            placeholder="Quick add to Today…"
+            placeholder={ultra ? "Add…" : "Quick add to Today…"}
             enterKeyHint="done"
-            className="min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]"
+            className={[
+              "min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)]",
+              ultra ? "px-2 py-1.5 text-xs" : "px-2.5 py-2 text-sm",
+            ].join(" ")}
           />
           <button
             type="submit"
             disabled={!quickAdd.trim() || adding}
-            className="shrink-0 rounded-lg bg-[var(--color-accent)] px-3 py-2 text-xs font-semibold text-white transition-all active:scale-95 disabled:opacity-40"
+            className={[
+              "shrink-0 rounded-lg bg-[var(--color-accent)] font-semibold text-white transition-all active:scale-95 disabled:opacity-40",
+              ultra ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-xs",
+            ].join(" ")}
           >
             Add
           </button>
         </form>
-        <p className="mt-2 hidden text-[10px] text-[var(--color-text-muted)] sm:block">
-          Space complete · N add · F focus · J/K move · C collapse · Esc exit
-        </p>
+        {(standalone || popout) && !ultra ? (
+          <p className="mt-2 text-[10px] leading-relaxed text-[var(--color-text-muted)]">
+            Drag the window edge to resize — layout adapts down to {FOCUS_MIN_WIDTH}px for
+            FancyZones.
+          </p>
+        ) : null}
+        {!slim ? (
+          <p className="mt-2 hidden text-[10px] text-[var(--color-text-muted)] sm:block">
+            Space complete · N add · F focus · J/K move · C collapse · Esc exit
+          </p>
+        ) : null}
       </footer>
     </div>
   );
@@ -364,13 +484,13 @@ export function FocusDockFrame({
   return (
     <div
       className={[
-        "flex min-h-0 flex-1 bg-[var(--color-surface)] p-0 sm:p-3",
-        dock === "left" && "sm:justify-start",
-        dock === "right" && "sm:justify-end",
-        dock === "center" && "sm:justify-center",
+        "flex min-h-0 w-full flex-1 bg-[var(--color-surface)]",
+        dock === "left" && "justify-start",
+        dock === "right" && "justify-end",
+        dock === "center" && "justify-center",
       ].join(" ")}
     >
-      <div className="h-full w-full min-w-0 sm:max-w-[380px]">{children}</div>
+      <div className="h-full w-full min-w-0">{children}</div>
     </div>
   );
 }

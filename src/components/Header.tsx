@@ -69,7 +69,7 @@ export function Header() {
               <>
                 <button
                   type="button"
-                  onClick={openFocusPopout}
+                  onClick={() => openFocusPopout()}
                   className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
                   title="Open focus in a side window"
                 >

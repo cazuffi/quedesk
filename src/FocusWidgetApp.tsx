@@ -10,7 +10,7 @@ export function FocusWidgetApp() {
       <ConfirmProvider>
         <TasksProvider>
           <UiProvider initialFocusMode>
-            <div className="h-full min-h-0 bg-[var(--color-surface)]">
+            <div className="h-full min-h-0 w-full min-w-0 bg-[var(--color-surface)]">
               <FocusPanel variant="standalone" />
             </div>
           </UiProvider>

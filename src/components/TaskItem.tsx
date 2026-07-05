@@ -7,7 +7,7 @@ import { MoveToMenu } from "./MoveToMenu";
 import { OverflowMenu } from "./OverflowMenu";
 import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
-import { openSourceLink } from "../lib/sourceLink";
+import { SourceLinkButton } from "./SourceLinkButton";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 
@@ -112,13 +112,13 @@ export function TaskItem({
         />
       ) : null}
 
-      {!isCleared && !embedded && !dragHandleProps && !batchSelectionMode && (
+      {!isCleared && !embedded && !batchSelectionMode && (
         <button
           type="button"
-          className="mt-0.5 hidden cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing sm:block"
+          className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
           aria-label="Drag to reorder or drop on a tab"
-          {...drag.attributes}
-          {...drag.listeners}
+          {...(dragHandleProps ? dragHandleProps.attributes : drag.attributes)}
+          {...(dragHandleProps ? dragHandleProps.listeners : drag.listeners)}
         >
           ⠿
         </button>
@@ -249,18 +249,9 @@ export function TaskItem({
                 {tag}
               </span>
             ))}
-            {task.sourceLink && (
-              <button
-                type="button"
-                className="text-[var(--color-accent)] transition-colors hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSourceLink(task.sourceLink!);
-                }}
-              >
-                Source ↗
-              </button>
-            )}
+            {task.sourceLink ? (
+              <SourceLinkButton sourceLink={task.sourceLink} />
+            ) : null}
           </div>
         )}
 

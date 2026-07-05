@@ -19,6 +19,7 @@ interface TaskCardProps {
   emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
+  allowReorder?: boolean;
   highlightNew?: boolean;
   batchSelectionMode?: boolean;
   batchSelected?: boolean;
@@ -44,6 +45,7 @@ export function TaskCard({
   emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
+  allowReorder = true,
   highlightNew = false,
   batchSelectionMode = false,
   batchSelected = false,
@@ -83,7 +85,7 @@ export function TaskCard({
     isDragging,
   } = useSortable({
     id: taskDragId(task.id),
-    disabled: task.status === "cleared" || batchSelectionMode,
+    disabled: task.status === "cleared" || batchSelectionMode || !allowReorder,
   });
 
   const style = {
@@ -152,16 +154,17 @@ export function TaskCard({
       ].join(" ")}
     >
       <div className="flex items-start gap-2">
-        <button
-          type="button"
-          className="mt-0.5 hidden cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing sm:block"
-          aria-label="Drag to reorder or drop on a tab"
-          {...attributes}
-          {...listeners}
-          style={batchSelectionMode ? { visibility: "hidden" } : undefined}
-        >
-          ⠿
-        </button>
+        {!batchSelectionMode && allowReorder ? (
+          <button
+            type="button"
+            className="mt-0.5 cursor-grab touch-none text-[var(--color-text-muted)]/50 transition-colors hover:text-[var(--color-text-muted)] active:cursor-grabbing"
+            aria-label="Drag to reorder or drop on a tab"
+            {...attributes}
+            {...listeners}
+          >
+            ⠿
+          </button>
+        ) : null}
 
         {!batchSelectionMode ? (
         <button

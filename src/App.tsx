@@ -2,6 +2,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -79,6 +80,9 @@ function AppContent() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 6 },
+    }),
   );
 
   useEffect(() => {
@@ -167,7 +171,7 @@ function AppContent() {
     const overTaskId = parseTaskDragId(over.id);
     if (!overTaskId || overTaskId === taskId) return;
 
-    const queueTasks = tasksForTab(task.queue as QueueTab).filter(
+    const queueTasks = tasksForTab(activeTab).filter(
       (t) => t.status !== "cleared",
     );
     const oldIndex = queueTasks.findIndex((t) => t.id === taskId);
@@ -177,7 +181,7 @@ function AppContent() {
     try {
       const reordered = arrayMove(queueTasks, oldIndex, newIndex);
       await reorderInQueue(
-        task.queue,
+        activeTab as TaskQueue,
         reordered.map((t) => t.id),
       );
     } catch (error) {

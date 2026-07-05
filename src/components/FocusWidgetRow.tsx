@@ -1,5 +1,6 @@
 import { formatDueDate, isOverdue } from "../lib/data";
 import type { Task } from "../types";
+import { SourceLinkButton } from "./SourceLinkButton";
 
 interface FocusWidgetRowProps {
   task: Task;
@@ -45,17 +46,22 @@ export function FocusWidgetRow({
       />
 
       <div className="min-w-0 flex-1">
-        <p
-          className={[
-            "leading-snug",
-            ultra ? "text-xs" : compact ? "text-[13px]" : "text-sm",
-            completed
-              ? "line-through text-[var(--color-text-muted)]"
-              : ultra ? "font-medium text-[var(--color-text)]" : "font-medium text-[var(--color-text)]",
-          ].join(" ")}
-        >
-          {task.title}
-        </p>
+        <div className="flex items-start gap-1">
+          <p
+            className={[
+              "min-w-0 flex-1 leading-snug",
+              ultra ? "text-xs" : compact ? "text-[13px]" : "text-sm",
+              completed
+                ? "line-through text-[var(--color-text-muted)]"
+                : "font-medium text-[var(--color-text)]",
+            ].join(" ")}
+          >
+            {task.title}
+          </p>
+          {task.sourceLink ? (
+            <SourceLinkButton sourceLink={task.sourceLink} iconOnly />
+          ) : null}
+        </div>
         {task.dueDate && !ultra ? (
           <p
             className={[

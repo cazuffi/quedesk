@@ -1,5 +1,6 @@
 import { formatDueDate, isOverdue } from "../lib/data";
 import type { Task } from "../types";
+import { SourceLinkButton } from "./SourceLinkButton";
 
 interface FocusNowCardProps {
   task: Task;
@@ -41,17 +42,22 @@ export function FocusNowCard({
           aria-label={completed ? "Mark incomplete" : "Mark complete"}
         />
         <div className="min-w-0 flex-1">
-          <p
-            className={[
-              "font-semibold leading-snug",
-              ultra ? "text-sm" : compact ? "text-[15px]" : "text-base",
-              completed
-                ? "line-through text-[var(--color-text-muted)]"
-                : "text-[var(--color-text)]",
-            ].join(" ")}
-          >
-            {task.title}
-          </p>
+          <div className="flex items-start gap-1.5">
+            <p
+              className={[
+                "min-w-0 flex-1 font-semibold leading-snug",
+                ultra ? "text-sm" : compact ? "text-[15px]" : "text-base",
+                completed
+                  ? "line-through text-[var(--color-text-muted)]"
+                  : "text-[var(--color-text)]",
+              ].join(" ")}
+            >
+              {task.title}
+            </p>
+            {task.sourceLink ? (
+              <SourceLinkButton sourceLink={task.sourceLink} iconOnly />
+            ) : null}
+          </div>
           {task.dueDate && !ultra ? (
             <p
               className={[

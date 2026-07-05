@@ -13,6 +13,7 @@ interface TaskListProps {
   emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
+  allowReorder?: boolean;
   highlightNew?: boolean;
   batchSelectionMode?: boolean;
   selectedBatchIds?: Set<string>;
@@ -38,6 +39,7 @@ export function TaskList({
   emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
+  allowReorder = true,
   highlightNew = false,
   batchSelectionMode = false,
   selectedBatchIds,
@@ -81,6 +83,7 @@ export function TaskList({
               emphasis={emphasis}
               showQueueBadge={showQueueBadge}
               allowSubtasks={allowSubtasks}
+              allowReorder={allowReorder}
               highlightNew={highlightNew}
               batchSelectionMode={batchSelectionMode}
               batchSelected={selectedBatchIds?.has(task.id) ?? false}

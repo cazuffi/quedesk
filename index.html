@@ -10,6 +10,24 @@
     <title>QueDesk</title>
   </head>
   <body>
+    <script type="text/javascript">
+      (function (location) {
+        if (location.search[1] === "/") {
+          var decoded = location.search
+            .slice(1)
+            .split("&")
+            .map(function (segment) {
+              return segment.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            location.pathname.slice(0, -1) + decoded + location.hash,
+          );
+        }
+      })(window.location);
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,5 +1,6 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import App from "./App";
+import { isFocusRoute } from "./lib/focusWindow";
 import { isDesktop } from "./lib/platform";
 
 type AppWindow = "main" | "today-widget" | "quick-capture";
@@ -45,16 +46,22 @@ export function Root() {
 
 function WebRoot() {
   const [Gate, setGate] = useState<ComponentType<{ children: ReactNode }> | null>(null);
+  const [FocusApp, setFocusApp] = useState<ComponentType | null>(null);
+  const focusRoute = isFocusRoute();
 
   useEffect(() => {
     import("./components/AuthGate").then((m) => setGate(() => m.AuthGate));
-  }, []);
+    if (focusRoute) {
+      import("./FocusWidgetApp").then((m) => setFocusApp(() => m.FocusWidgetApp));
+    }
+  }, [focusRoute]);
 
   if (!Gate) return null;
+  if (focusRoute && !FocusApp) return null;
 
   return (
     <Gate>
-      <App />
+      {focusRoute && FocusApp ? <FocusApp /> : <App />}
     </Gate>
   );
 }

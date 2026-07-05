@@ -229,7 +229,7 @@ function AppContent() {
       }}
     >
       <div className="flex h-full min-h-0 flex-col bg-[var(--color-surface)]">
-        <Header />
+        {!focusMode ? <Header /> : null}
 
         {!focusMode && (
           <TabBar
@@ -241,28 +241,7 @@ function AppContent() {
 
         <main className="flex min-h-0 flex-1 overflow-hidden">
           {focusMode ? (
-            <div className="flex min-w-0 flex-1">
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <FocusView />
-              </div>
-              {panelLayout === "side" && selectedTask && (
-                <div ref={panelRef} className="flex h-full shrink-0">
-                  <TaskDetailPanel
-                    task={selectedTask}
-                    allTasks={tasks}
-                    layout="side"
-                    onClose={closePanel}
-                    onExpand={expandPanel}
-                    onCollapse={collapsePanel}
-                    onSave={editTask}
-                    onToggle={toggleComplete}
-                    onMove={moveTaskToQueue}
-                    onDelete={handleDeleteFromPanel}
-                    onOpenTask={selectTask}
-                  />
-                </div>
-              )}
-            </div>
+            <FocusView />
           ) : (
             <div className="flex min-w-0 flex-1">
               <div className="min-w-0 flex-1 overflow-hidden">
@@ -293,7 +272,7 @@ function AppContent() {
           )}
         </main>
 
-        <StatusBar dbReady={dbReady} dbError={dbError} />
+        {!focusMode ? <StatusBar dbReady={dbReady} dbError={dbError} /> : null}
       </div>
 
       {panelLayout === "full" && selectedTask && (

@@ -4,6 +4,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useTasks } from "../contexts/TasksContext";
 import { useUi } from "../contexts/UiContext";
 import { isWeb } from "../lib/platform";
+import { focusAppUrl, openFocusPopout } from "../lib/focusWindow";
 import { WEB_APP_VERSION } from "../lib/appVersion";
 import { SearchBar } from "./SearchBar";
 
@@ -64,6 +65,27 @@ export function Header() {
             >
               {focusMode ? "Exit focus" : "Focus"}
             </button>
+            {web && !focusMode ? (
+              <>
+                <button
+                  type="button"
+                  onClick={openFocusPopout}
+                  className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+                  title="Open focus in a side window"
+                >
+                  Pop out
+                </button>
+                <a
+                  href={focusAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-all hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+                  title="Bookmark /focus for a sidecar window"
+                >
+                  /focus
+                </a>
+              </>
+            ) : null}
             <button
               type="button"
               onClick={toggle}
@@ -100,16 +122,28 @@ export function Header() {
                   onClick={() => setMenuOpen(false)}
                 />
                 <div className="absolute right-0 top-full z-40 mt-1 w-40 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-1 shadow-xl">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      toggleFocusMode();
-                      setMenuOpen(false);
-                    }}
-                    className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-                  >
-                    {focusMode ? "Exit focus" : "Focus mode"}
-                  </button>
+            <button
+              type="button"
+              onClick={() => {
+                toggleFocusMode();
+                setMenuOpen(false);
+              }}
+              className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+            >
+              {focusMode ? "Exit focus" : "Focus mode"}
+            </button>
+            {isWeb() && !focusMode ? (
+              <button
+                type="button"
+                onClick={() => {
+                  openFocusPopout();
+                  setMenuOpen(false);
+                }}
+                className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+              >
+                Pop out focus
+              </button>
+            ) : null}
                   <button
                     type="button"
                     onClick={() => {

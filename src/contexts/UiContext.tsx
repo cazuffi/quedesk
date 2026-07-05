@@ -20,15 +20,24 @@ interface UiContextValue {
   expandPanel: () => void;
   collapsePanel: () => void;
   toggleFocusMode: () => void;
+  setFocusMode: (enabled: boolean) => void;
   toggleHideCompleted: () => void;
 }
 
 const UiContext = createContext<UiContextValue | null>(null);
 
-export function UiProvider({ children }: { children: ReactNode }) {
+interface UiProviderProps {
+  children: ReactNode;
+  initialFocusMode?: boolean;
+}
+
+export function UiProvider({
+  children,
+  initialFocusMode = false,
+}: UiProviderProps) {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [panelLayout, setPanelLayout] = useState<PanelLayout>("closed");
-  const [focusMode, setFocusMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(initialFocusMode);
   const [hideCompleted, setHideCompleted] = useState(true);
 
   const isMobile = () => window.innerWidth < 640;
@@ -65,6 +74,10 @@ export function UiProvider({ children }: { children: ReactNode }) {
     setFocusMode((value) => !value);
   }, []);
 
+  const setFocusModeExplicit = useCallback((enabled: boolean) => {
+    setFocusMode(enabled);
+  }, []);
+
   const toggleHideCompleted = useCallback(() => {
     setHideCompleted((value) => !value);
   }, []);
@@ -80,6 +93,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       expandPanel,
       collapsePanel,
       toggleFocusMode,
+      setFocusMode: setFocusModeExplicit,
       toggleHideCompleted,
     }),
     [
@@ -92,6 +106,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
       expandPanel,
       collapsePanel,
       toggleFocusMode,
+      setFocusModeExplicit,
       toggleHideCompleted,
     ],
   );

@@ -243,7 +243,7 @@ function AppContent() {
         setDropTargetTab(null);
       }}
     >
-      <div className="flex h-full min-h-0 flex-col bg-[var(--color-surface)]">
+      <div className="app-shell flex h-full min-h-0 flex-col overflow-hidden bg-[var(--color-surface)]">
         {!focusMode ? <Header /> : null}
 
         {!focusMode && (
@@ -254,12 +254,12 @@ function AppContent() {
           />
         )}
 
-        <main className="flex min-h-0 flex-1 overflow-hidden">
+        <main className="flex h-full min-h-0 flex-1 overflow-hidden">
           {focusMode ? (
             <FocusView />
           ) : (
-            <div className="flex min-w-0 flex-1">
-              <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden">
+              <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
                 <QueuePanel
                   tab={activeTabConfig}
                   isSearchActive={isSearchActive}

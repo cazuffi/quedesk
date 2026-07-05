@@ -32,7 +32,7 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   if (session) {
-    return <>{children}</>;
+    return <div className="app-shell h-full min-h-0">{children}</div>;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

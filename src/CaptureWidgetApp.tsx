@@ -8,7 +8,7 @@ export function CaptureWidgetApp() {
     <ThemeProvider>
       <ConfirmProvider>
         <TasksProvider>
-          <div className="h-full min-h-0 w-full min-w-0 bg-[var(--color-surface)]">
+          <div className="app-shell h-full min-h-0 w-full min-w-0 bg-[var(--color-surface)]">
             <QuickCaptureForm variant="standalone" />
           </div>
         </TasksProvider>

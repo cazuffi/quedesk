@@ -196,7 +196,7 @@ export function TaskDetailPanel({
         onSubmit={handleSubmit}
         className="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4 sm:px-5">
+        <div className="app-scroll-y flex min-h-0 flex-1 flex-col gap-4 px-4 py-4 sm:px-5">
           <div className="flex items-start gap-3">
             {task.status !== "cleared" && (
               <input

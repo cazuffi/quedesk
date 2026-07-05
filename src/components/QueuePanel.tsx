@@ -159,7 +159,7 @@ export function QueuePanel({
   const listEmphasis = isTodayTab ? "today" : "default";
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {isTodayTab ? (
         <TodayQueueHeader tasks={queueTasks} />
       ) : (
@@ -177,7 +177,7 @@ export function QueuePanel({
 
       <div
         className={[
-          "flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-5 sm:px-5",
+          "app-scroll-y flex min-h-0 flex-1 flex-col gap-3 px-4 pb-5 sm:px-5",
           isTodayTab ? "pt-3" : "",
         ].join(" ")}
       >

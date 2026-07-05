@@ -62,7 +62,7 @@ export function TabBar({
 }: TabBarProps) {
   return (
     <nav
-      className="flex gap-0.5 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 sm:px-5"
+      className="app-scroll-x flex shrink-0 gap-0.5 overflow-x-auto border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-3 sm:px-5"
       aria-label="Queues"
     >
       {QUEUE_TABS.map((tab) => (

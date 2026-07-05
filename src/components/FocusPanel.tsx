@@ -385,7 +385,7 @@ export function FocusPanel({
         </div>
       </header>
 
-      <div className={["min-h-0 flex-1 overflow-y-auto overflow-x-hidden", bodyPad].join(" ")}>
+      <div className={["app-scroll-y min-h-0 flex-1 overflow-x-hidden", bodyPad].join(" ")}>
         {nowTask ? (
           <div className={ultra ? "mb-2" : "mb-3"}>
             <FocusNowCard
@@ -484,7 +484,7 @@ export function FocusDockFrame({
   return (
     <div
       className={[
-        "flex min-h-0 w-full flex-1 bg-[var(--color-surface)]",
+        "flex min-h-0 w-full flex-1 overflow-hidden bg-[var(--color-surface)]",
         dock === "left" && "justify-start",
         dock === "right" && "justify-end",
         dock === "center" && "justify-center",

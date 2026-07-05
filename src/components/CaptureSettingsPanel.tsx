@@ -141,7 +141,7 @@ export function CaptureSettingsPanel({ onClose }: CaptureSettingsPanelProps) {
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+        <div className="app-scroll-y min-h-0 flex-1 space-y-4 overflow-x-hidden px-4 py-4">
           {error && (
             <p className="rounded-lg bg-[var(--color-danger-soft)] px-3 py-2 text-xs text-[var(--color-danger)]">
               {error}

@@ -189,28 +189,97 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     [refreshAndNotify],
   );
 
-  const addSubtask = useCallback(
-    async (parentId: string, title: string) => {
-      await createSubtask(parentId, title);
-      await refreshAndNotify();
-    },
-    [refreshAndNotify],
-  );
+  const addSubtask = useCallback(async (parentId: string, title: string) => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+
+    const tempId = `pending-${crypto.randomUUID()}`;
+
+    setTasks((prev) => {
+      const parent = prev.find((t) => t.id === parentId);
+      const optimistic: Task = {
+        id: tempId,
+        title: trimmed,
+        notes: "",
+        queue: parent?.queue ?? "inbox",
+        parentId,
+        surfaceOfId: null,
+        sortOrder: getSubtasks(prev, parentId).length,
+        dueDate: null,
+        tags: [],
+        sourceLink: null,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        completedAt: null,
+        clearedAt: null,
+      };
+      return [...prev, optimistic];
+    });
+
+    try {
+      const task = await createSubtask(parentId, trimmed);
+      setTasks((prev) => prev.map((t) => (t.id === tempId ? task : t)));
+      void notifyTasksChanged();
+    } catch (error) {
+      setTasks((prev) => prev.filter((t) => t.id !== tempId));
+      throw error;
+    }
+  }, []);
 
   const addSubtasksBatch = useCallback(
     async (parentId: string, titles: string[]): Promise<Task[]> => {
-      const created: Task[] = [];
-      for (const title of titles) {
-        const trimmed = title.trim();
-        if (trimmed) {
-          const task = await createSubtask(parentId, trimmed);
-          created.push(task);
-        }
+      const trimmed = titles.map((t) => t.trim()).filter(Boolean);
+      if (trimmed.length === 0) return [];
+
+      const pending = trimmed.map((title, index) => ({
+        tempId: `pending-${crypto.randomUUID()}`,
+        title,
+        index,
+      }));
+
+      setTasks((prev) => {
+        const parent = prev.find((t) => t.id === parentId);
+        const baseOrder = getSubtasks(prev, parentId).length;
+        const optimistic = pending.map(({ tempId, title, index }) => ({
+          id: tempId,
+          title,
+          notes: "",
+          queue: parent?.queue ?? "inbox",
+          parentId,
+          surfaceOfId: null,
+          sortOrder: baseOrder + index,
+          dueDate: null,
+          tags: [],
+          sourceLink: null,
+          status: "active" as const,
+          createdAt: new Date().toISOString(),
+          completedAt: null,
+          clearedAt: null,
+        }));
+        return [...prev, ...optimistic];
+      });
+
+      try {
+        const created = await Promise.all(
+          trimmed.map((title) => createSubtask(parentId, title)),
+        );
+
+        const tempToReal = new Map(
+          pending.map((p, index) => [p.tempId, created[index]]),
+        );
+
+        setTasks((prev) =>
+          prev.map((t) => tempToReal.get(t.id) ?? t),
+        );
+        void notifyTasksChanged();
+        return created;
+      } catch (error) {
+        const tempIds = new Set(pending.map((p) => p.tempId));
+        setTasks((prev) => prev.filter((t) => !tempIds.has(t.id)));
+        throw error;
       }
-      await refreshAndNotify();
-      return created;
     },
-    [refreshAndNotify],
+    [],
   );
 
   const editTask = useCallback(

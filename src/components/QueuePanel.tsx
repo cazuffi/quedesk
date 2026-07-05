@@ -6,6 +6,7 @@ import type { QueueTabConfig, TaskQueue } from "../types";
 import { NextSubtaskPrompt } from "./NextSubtaskPrompt";
 import { TaskInput } from "./TaskInput";
 import { TaskList } from "./TaskList";
+import { TodayQueueHeader } from "./TodayQueueHeader";
 
 interface QueuePanelProps {
   tab: QueueTabConfig;
@@ -105,25 +106,40 @@ export function QueuePanel({
     }
   }
 
+  const isTodayTab = tab.id === "today" && !isSearchActive;
+  const listEmphasis = isTodayTab ? "today" : "default";
+
   return (
     <div className="flex h-full flex-col">
-      <div className="px-4 py-3 sm:px-5 sm:py-4">
-        <h2 className="text-lg font-semibold tracking-tight sm:text-base">
-          {isSearchActive ? "Search results" : tab.label}
-        </h2>
-        <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
-          {isSearchActive
-            ? `${queueTasks.length} matching task${queueTasks.length === 1 ? "" : "s"}`
-            : tab.description}
-        </p>
-      </div>
+      {isTodayTab ? (
+        <TodayQueueHeader tasks={queueTasks} />
+      ) : (
+        <div className="px-4 py-3 sm:px-5 sm:py-4">
+          <h2 className="text-lg font-semibold tracking-tight sm:text-base">
+            {isSearchActive ? "Search results" : tab.label}
+          </h2>
+          <p className="mt-0.5 text-xs text-[var(--color-text-muted)]">
+            {isSearchActive
+              ? `${queueTasks.length} matching task${queueTasks.length === 1 ? "" : "s"}`
+              : tab.description}
+          </p>
+        </div>
+      )}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-5 sm:px-5">
+      <div
+        className={[
+          "flex min-h-0 flex-1 flex-col gap-3 overflow-auto px-4 pb-5 sm:px-5",
+          isTodayTab ? "pt-3" : "",
+        ].join(" ")}
+      >
         <NextSubtaskPrompt />
 
         {!isSearchActive && tab.id !== "archive" && (
           <TaskInput
-            placeholder={`Add to ${tab.label}…`}
+            placeholder={
+              isTodayTab ? "Add something for today…" : `Add to ${tab.label}…`
+            }
+            variant={isTodayTab ? "secondary" : "primary"}
             onAdd={handleAdd}
           />
         )}
@@ -159,6 +175,7 @@ export function QueuePanel({
           tasks={queueTasks}
           allTasks={tasks}
           selectedTaskId={selectedTaskId}
+          emphasis={listEmphasis}
           showQueueBadge={isSearchActive}
           allowSubtasks={!isSearchActive && tab.id !== "archive"}
           emptyMessage={

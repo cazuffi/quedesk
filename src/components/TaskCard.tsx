@@ -7,7 +7,7 @@ import { SubtaskSection } from "./SubtaskRow";
 import { TaskItem } from "./TaskItem";
 import { OverflowMenu } from "./OverflowMenu";
 import { useTouchLayout } from "../hooks/useTouchLayout";
-import { taskDragId, type Task, type TaskQueue } from "../types";
+import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 
 interface TaskCardProps {
   task: Task;
@@ -15,6 +15,7 @@ interface TaskCardProps {
   subtasks: Task[];
   parentTitle?: string | null;
   isSelected?: boolean;
+  emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
   onToggle: (task: Task) => void;
@@ -35,6 +36,7 @@ export function TaskCard({
   subtasks,
   parentTitle,
   isSelected = false,
+  emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
   onToggle,
@@ -49,6 +51,7 @@ export function TaskCard({
   onClearDueDate,
 }: TaskCardProps) {
   const touchLayout = useTouchLayout();
+  const isToday = emphasis === "today";
   const isSurface = task.surfaceOfId !== null;
   const progress = parentProgress(subtasks);
   const hasSubtasks = subtasks.length > 0;
@@ -85,6 +88,7 @@ export function TaskCard({
     return (
       <TaskItem
         task={task}
+        emphasis={emphasis}
         parentTitle={parentTitle}
         parentTask={parentTask}
         siblingProgress={sibProgress}
@@ -115,9 +119,17 @@ export function TaskCard({
       style={style}
       className={[
         "group rounded-xl border bg-[var(--color-surface-raised)] px-3 py-3 transition-shadow sm:px-3.5 sm:py-2.5 sm:hover:shadow-sm",
+        isToday && task.status === "completed"
+          ? "border-[var(--color-border)]/80 bg-[var(--color-surface)]/80 opacity-80"
+          : "",
+        isToday && task.status === "active"
+          ? "border-[var(--color-accent)]/20 shadow-sm"
+          : "",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"
-          : "border-[var(--color-border)]",
+          : !isToday || task.status !== "active"
+            ? "border-[var(--color-border)]"
+            : "",
       ].join(" ")}
     >
       <div className="flex items-start gap-2">
@@ -156,6 +168,7 @@ export function TaskCard({
 
         <TaskItem
           embedded
+          emphasis={emphasis}
           hideOverflowMenu
           task={task}
           isSelected={isSelected}

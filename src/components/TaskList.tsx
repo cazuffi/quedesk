@@ -4,12 +4,13 @@ import {
 } from "@dnd-kit/sortable";
 import { resolveParentTitle } from "../lib/taskTree";
 import { TaskCard } from "./TaskCard";
-import { taskDragId, type Task, type TaskQueue } from "../types";
+import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 
 interface TaskListProps {
   tasks: Task[];
   allTasks: Task[];
   selectedTaskId?: string | null;
+  emphasis?: ListEmphasis;
   showQueueBadge?: boolean;
   allowSubtasks?: boolean;
   emptyMessage?: string;
@@ -30,6 +31,7 @@ export function TaskList({
   tasks,
   allTasks,
   selectedTaskId = null,
+  emphasis = "default",
   showQueueBadge = false,
   allowSubtasks = true,
   emptyMessage = "No tasks yet — add one above.",
@@ -68,6 +70,7 @@ export function TaskList({
               subtasks={subtasksFor(task.id)}
               parentTitle={resolveParentTitle(allTasks, task)}
               isSelected={task.id === selectedTaskId}
+              emphasis={emphasis}
               showQueueBadge={showQueueBadge}
               allowSubtasks={allowSubtasks}
               onToggle={onToggle}

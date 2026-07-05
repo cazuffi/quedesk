@@ -9,7 +9,7 @@ import { formatDueDate, isOverdue } from "../lib/data";
 import { buildTaskOverflowItems } from "../lib/taskOverflowItems";
 import { openSourceLink } from "../lib/sourceLink";
 import { useTouchLayout } from "../hooks/useTouchLayout";
-import { taskDragId, type Task, type TaskQueue } from "../types";
+import { taskDragId, type ListEmphasis, type Task, type TaskQueue } from "../types";
 
 interface DragHandleProps {
   attributes: DraggableAttributes;
@@ -22,6 +22,7 @@ interface DragHandleProps {
 interface TaskItemProps {
   task: Task;
   embedded?: boolean;
+  emphasis?: ListEmphasis;
   isSurface?: boolean;
   isSelected?: boolean;
   parentTitle?: string | null;
@@ -43,6 +44,7 @@ interface TaskItemProps {
 export function TaskItem({
   task,
   embedded = false,
+  emphasis = "default",
   isSurface = false,
   isSelected = false,
   parentTitle,
@@ -82,6 +84,7 @@ export function TaskItem({
 
   const completed = task.status === "completed";
   const overdue = isOverdue(task);
+  const isToday = emphasis === "today";
 
   const mobileMenuItems = buildTaskOverflowItems(
     task,
@@ -108,7 +111,10 @@ export function TaskItem({
           type="checkbox"
           checked={completed}
           onChange={() => onToggle(task)}
-          className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)] sm:mt-1 sm:h-3.5 sm:w-3.5"
+          className={[
+            "mt-0.5 shrink-0 cursor-pointer rounded accent-[var(--color-accent)]",
+            isToday ? "h-6 w-6 sm:h-4 sm:w-4" : "h-5 w-5 sm:mt-1 sm:h-3.5 sm:w-3.5",
+          ].join(" ")}
           aria-label={completed ? "Mark incomplete" : "Mark complete"}
         />
       ) : null}
@@ -132,10 +138,15 @@ export function TaskItem({
             type="button"
             onClick={() => onEdit(task)}
             className={[
-              "text-left text-base leading-snug transition-colors active:text-[var(--color-accent)] sm:text-sm sm:hover:text-[var(--color-accent)]",
+              "text-left leading-snug transition-colors active:text-[var(--color-accent)] sm:hover:text-[var(--color-accent)]",
+              isToday
+                ? "text-lg font-semibold sm:text-base"
+                : "text-base sm:text-sm",
               completed
                 ? "line-through text-[var(--color-text-muted)]"
-                : "font-medium",
+                : isToday
+                  ? "text-[var(--color-text)]"
+                  : "font-medium",
             ].join(" ")}
           >
             {task.title}
@@ -288,6 +299,10 @@ export function TaskItem({
       style={drag.style}
       className={[
         "group flex flex-col rounded-xl border bg-[var(--color-surface-raised)] px-3.5 py-2.5 transition-shadow hover:shadow-sm",
+        isToday && !completed && !isCleared
+          ? "border-l-[3px] border-l-[var(--color-accent)] border-[var(--color-accent)]/15 shadow-sm"
+          : "",
+        isToday && completed ? "opacity-75" : "",
         isSurface ? "border-l-2 border-l-[var(--color-accent)]" : "",
         isSelected
           ? "border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/20"

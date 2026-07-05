@@ -1,3 +1,5 @@
+export type ListEmphasis = "default" | "today";
+
 export type QueueTab = "today" | "week" | "backlog" | "inbox" | "archive";
 
 export type TaskQueue = "inbox" | "today" | "week" | "backlog";

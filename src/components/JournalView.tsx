@@ -242,11 +242,17 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            {!isToday && !isSearchActive ? (
+            {!isSearchActive ? (
               <button
                 type="button"
                 onClick={goToToday}
-                className="rounded-lg bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]"
+                disabled={isToday}
+                className={[
+                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+                  isToday
+                    ? "cursor-default bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+                    : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]",
+                ].join(" ")}
               >
                 Today
               </button>

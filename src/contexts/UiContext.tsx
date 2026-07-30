@@ -104,6 +104,7 @@ export function UiProvider({
     setJournalMode((value) => {
       const next = !value;
       if (next) {
+        setJournalDate(todayDateString());
         setFocusMode(false);
         setSelectedTaskId(null);
         setPanelLayout("closed");
@@ -115,6 +116,7 @@ export function UiProvider({
   const setJournalModeExplicit = useCallback((enabled: boolean) => {
     setJournalMode(enabled);
     if (enabled) {
+      setJournalDate(todayDateString());
       setFocusMode(false);
       setSelectedTaskId(null);
       setPanelLayout("closed");

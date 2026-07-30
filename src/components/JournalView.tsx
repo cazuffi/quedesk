@@ -241,7 +241,14 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
         </div>
       </div>
 
-      <div className="app-scroll-y flex min-h-0 flex-1 flex-col px-4 py-3 sm:px-5 sm:py-4">
+      <div
+        className={[
+          "flex min-h-0 flex-1 flex-col px-4 sm:px-5",
+          isSearchActive
+            ? "app-scroll-y overflow-x-hidden py-3 sm:py-4"
+            : "overflow-hidden py-3 sm:py-4",
+        ].join(" ")}
+      >
         {isSearchActive ? (
           <JournalSearchResults
             query={searchQuery.trim()}

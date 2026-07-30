@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTouchLayout } from "../hooks/useTouchLayout";
 import { MARKDOWN_TIPS, markdownHelpShortcutLabel } from "../lib/markdownTips";
+
+type MarkdownView = "write" | "split" | "preview";
 
 interface MarkdownNotesProps {
   value: string;
@@ -65,6 +68,15 @@ function MarkdownTipsPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+function viewButtonClass(active: boolean): string {
+  return [
+    "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors",
+    active
+      ? "bg-[var(--color-accent)] text-white"
+      : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]",
+  ].join(" ");
+}
+
 export function MarkdownNotes({
   value,
   onChange,
@@ -74,9 +86,14 @@ export function MarkdownNotes({
   textareaRef,
   onSelectionChange,
 }: MarkdownNotesProps) {
-  const [tab, setTab] = useState<"write" | "preview">("write");
+  const touchLayout = useTouchLayout();
+  const [view, setView] = useState<MarkdownView>(
+    fill && !touchLayout ? "split" : "write",
+  );
   const [showTips, setShowTips] = useState(false);
   const helpShortcut = markdownHelpShortcutLabel();
+
+  const showWrite = view === "write" || view === "split";
 
   const editorClass = fill
     ? "min-h-0 w-full flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]"
@@ -85,7 +102,7 @@ export function MarkdownNotes({
       : "min-h-[12rem] flex-1 resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]";
 
   const previewClass = fill
-    ? "markdown-body min-h-0 flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
+    ? "markdown-body min-h-0 flex-1 overflow-y-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
     : compact
       ? "markdown-body min-h-[8rem] overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
       : "markdown-body min-h-[12rem] flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm";
@@ -111,39 +128,83 @@ export function MarkdownNotes({
   }
 
   const containerClass = fill
-    ? "relative flex min-h-0 flex-1 flex-col"
+    ? "relative flex min-h-0 flex-1 flex-col overflow-hidden"
     : compact
       ? "relative flex flex-col"
       : "relative flex min-h-0 flex-1 flex-col";
 
+  const previewContent = value.trim() ? (
+    <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+  ) : (
+    <p className="text-[var(--color-text-muted)]">Nothing to preview yet.</p>
+  );
+
+  const editorField = (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={handleEditorKeyDown}
+      onSelect={(e) => reportSelection(e.currentTarget)}
+      onMouseUp={(e) => reportSelection(e.currentTarget)}
+      onKeyUp={(e) => reportSelection(e.currentTarget)}
+      placeholder={placeholder ?? `Markdown notes — ${helpShortcut} for tips`}
+      className={editorClass}
+    />
+  );
+
+  const previewPane = (
+    <div className={previewClass}>{previewContent}</div>
+  );
+
   return (
     <div className={containerClass}>
-      <div className="mb-2 flex flex-wrap items-center gap-0.5">
-        <button
-          type="button"
-          onClick={() => setTab("write")}
-          className={[
-            "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors",
-            tab === "write"
-              ? "bg-[var(--color-accent)] text-white"
-              : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]",
-          ].join(" ")}
-        >
-          Write
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("preview")}
-          className={[
-            "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-colors",
-            tab === "preview"
-              ? "bg-[var(--color-accent)] text-white"
-              : "text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text)]",
-          ].join(" ")}
-        >
-          Preview
-        </button>
-        {tab === "write" && (
+      <div className="relative mb-2 flex shrink-0 flex-wrap items-center gap-0.5">
+        {fill ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setView("write")}
+              className={viewButtonClass(view === "write")}
+            >
+              Write
+            </button>
+            {!touchLayout ? (
+              <button
+                type="button"
+                onClick={() => setView("split")}
+                className={viewButtonClass(view === "split")}
+              >
+                Split
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setView("preview")}
+              className={viewButtonClass(view === "preview")}
+            >
+              Preview
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setView("write")}
+              className={viewButtonClass(view === "write")}
+            >
+              Write
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("preview")}
+              className={viewButtonClass(view === "preview")}
+            >
+              Preview
+            </button>
+          </>
+        )}
+        {(view === "write" || view === "split") && (
           <button
             type="button"
             onClick={toggleTips}
@@ -160,34 +221,33 @@ export function MarkdownNotes({
         )}
       </div>
 
-      {showTips && tab === "write" && (
+      {showTips && (view === "write" || view === "split") && (
         <MarkdownTipsPanel onClose={() => setShowTips(false)} />
       )}
 
-      {tab === "write" ? (
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={handleEditorKeyDown}
-          onSelect={(e) => reportSelection(e.currentTarget)}
-          onMouseUp={(e) => reportSelection(e.currentTarget)}
-          onKeyUp={(e) => reportSelection(e.currentTarget)}
-          placeholder={
-            placeholder ?? `Markdown notes — ${helpShortcut} for tips`
-          }
-          className={editorClass}
-        />
-      ) : (
-        <div className={previewClass}>
-          {value.trim() ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
-          ) : (
-            <p className="text-[var(--color-text-muted)]">
-              Nothing to preview.
+      {fill && view === "split" ? (
+        <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-hidden">
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
+            <p className="mb-1.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              Markdown
             </p>
-          )}
+            {editorField}
+          </div>
+          <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
+            <p className="mb-1.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
+              Preview
+            </p>
+            {previewPane}
+          </div>
         </div>
+      ) : fill ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {showWrite ? editorField : previewPane}
+        </div>
+      ) : view === "preview" ? (
+        previewPane
+      ) : (
+        editorField
       )}
     </div>
   );

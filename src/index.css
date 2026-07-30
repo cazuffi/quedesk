@@ -334,3 +334,24 @@ input[type="checkbox"]:focus-visible {
   cursor: pointer;
   vertical-align: -0.15em;
 }
+
+@media (max-width: 639px) {
+  html.journal-mode,
+  html.journal-mode body {
+    touch-action: pan-y;
+  }
+
+  .journal-live-editor,
+  .journal-live-editor .cm-editor,
+  .journal-live-editor .cm-scroller {
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* iOS auto-zooms focused fields under 16px — match task inputs */
+  .journal-live-editor .cm-content,
+  .journal-live-editor .cm-line {
+    font-size: 16px !important;
+  }
+}

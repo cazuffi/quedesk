@@ -7,6 +7,7 @@ import {
 } from "./JournalLiveEditor";
 import { SearchBar } from "./SearchBar";
 import { useTasks } from "../contexts/TasksContext";
+import { useJournalMobileViewportLock } from "../hooks/useJournalMobileViewportLock";
 import { usePhoneLayout } from "../hooks/usePhoneLayout";
 import {
   fetchJournalNote,
@@ -31,6 +32,7 @@ interface JournalViewProps {
 }
 
 export function JournalView({ date, onDateChange }: JournalViewProps) {
+  useJournalMobileViewportLock();
   const { addTask } = useTasks();
   const phoneLayout = usePhoneLayout();
   const editorRef = useRef<JournalLiveEditorHandle>(null);

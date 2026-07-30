@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { JournalSearchResults } from "./JournalSearchResults";
 import { JournalSelectionBar } from "./JournalSelectionBar";
-import { MarkdownNotes } from "./MarkdownNotes";
+import {
+  JournalLiveEditor,
+  type JournalLiveEditorHandle,
+} from "./JournalLiveEditor";
 import { SearchBar } from "./SearchBar";
 import { useTasks } from "../contexts/TasksContext";
 import { usePhoneLayout } from "../hooks/usePhoneLayout";
@@ -30,7 +33,7 @@ interface JournalViewProps {
 export function JournalView({ date, onDateChange }: JournalViewProps) {
   const { addTask } = useTasks();
   const phoneLayout = usePhoneLayout();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<JournalLiveEditorHandle>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedContentRef = useRef("");
 
@@ -181,7 +184,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
   function clearSelection() {
     setSelectedText("");
     setSelectionRange(null);
-    textareaRef.current?.setSelectionRange(0, 0);
+    editorRef.current?.clearSelection();
   }
 
   function goToToday() {
@@ -299,11 +302,10 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
         ) : loadError ? (
           <p className="text-sm text-red-600">{loadError}</p>
         ) : (
-          <MarkdownNotes
-            fill
+          <JournalLiveEditor
+            ref={editorRef}
             value={content}
             onChange={setContent}
-            textareaRef={textareaRef}
             onSelectionChange={(text, range) => {
               setSelectedText(text);
               setSelectionRange(range);

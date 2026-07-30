@@ -242,3 +242,68 @@ input[type="checkbox"]:focus-visible {
   background: var(--color-surface);
   font-weight: 600;
 }
+
+/* CodeMirror live preview (journal) */
+.journal-live-editor .cm-md-h1 {
+  font-size: 1.35em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.journal-live-editor .cm-md-h2 {
+  font-size: 1.2em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.journal-live-editor .cm-md-h3 {
+  font-size: 1.08em;
+  font-weight: 600;
+}
+
+.journal-live-editor .cm-md-h4,
+.journal-live-editor .cm-md-h5,
+.journal-live-editor .cm-md-h6 {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.journal-live-editor .cm-md-strong {
+  font-weight: 700;
+}
+
+.journal-live-editor .cm-md-em {
+  font-style: italic;
+}
+
+.journal-live-editor .cm-md-strike {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.journal-live-editor .cm-md-code {
+  border-radius: 0.3rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  padding: 0.05rem 0.3rem;
+  font-size: 0.9em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.journal-live-editor .cm-md-link,
+.journal-live-editor .cm-md-task-link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.journal-live-editor .cm-md-task-link {
+  font-weight: 500;
+}
+
+.journal-live-editor .cm-md-blockquote {
+  color: var(--color-text-muted);
+  border-left: 3px solid var(--color-accent);
+  padding-left: 0.5rem;
+}

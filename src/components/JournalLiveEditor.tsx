@@ -17,7 +17,7 @@ function listToggleShortcutLabel(): string {
   const isMac =
     typeof navigator !== "undefined" &&
     /Mac|iPhone|iPad|iPod/.test(navigator.platform);
-  return isMac ? "⌘L" : "Ctrl+L";
+  return isMac ? "⌘⇧L" : "Ctrl+Shift+L";
 }
 
 interface JournalLiveEditorProps {
@@ -81,7 +81,7 @@ export const JournalLiveEditor = forwardRef<
     const exts: Extension[] = [
       history(),
       keymap.of([
-        { key: "Mod-l", run: toggleBulletList },
+        { key: "Mod-Shift-l", run: toggleBulletList },
         ...defaultKeymap,
         ...historyKeymap,
       ]),

@@ -1,4 +1,4 @@
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage, markdownKeymap } from "@codemirror/lang-markdown";
 import { EditorSelection, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
@@ -7,10 +7,11 @@ import CodeMirror from "@uiw/react-codemirror";
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import {
   journalLinkClickExtension,
+  journalTaskCheckboxExtension,
   livePreviewExtension,
 } from "../lib/codemirror/livePreview";
 import { journalEditorTheme } from "../lib/codemirror/journalTheme";
-import { toggleBulletList } from "../lib/codemirror/listCommands";
+import { toggleTaskList } from "../lib/codemirror/listCommands";
 import { openMarkdownHref } from "../lib/sourceLink";
 
 function listToggleShortcutLabel(): string {
@@ -81,16 +82,18 @@ export const JournalLiveEditor = forwardRef<
     const exts: Extension[] = [
       history(),
       keymap.of([
-        { key: "Mod-Shift-l", run: toggleBulletList },
+        { key: "Mod-Shift-l", run: toggleTaskList },
+        ...markdownKeymap,
         ...defaultKeymap,
         ...historyKeymap,
       ]),
-      markdown({ base: markdownLanguage, codeLanguages: [] }),
+      markdown({ base: markdownLanguage, codeLanguages: [], addKeymap: false }),
       journalEditorTheme(),
       livePreviewExtension(),
       journalLinkClickExtension((href) => {
         void openMarkdownHref(href);
       }),
+      journalTaskCheckboxExtension(),
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -127,7 +130,7 @@ export const JournalLiveEditor = forwardRef<
         }}
       />
       <p className="shrink-0 border-t border-[var(--color-border)] px-3 py-1.5 text-[10px] text-[var(--color-text-muted)]">
-        Live preview — {listToggleShortcutLabel()} toggles bullet list. Tap a line
+        Live preview — {listToggleShortcutLabel()} toggles task list. Tap a line
         to edit markdown.
       </p>
     </div>

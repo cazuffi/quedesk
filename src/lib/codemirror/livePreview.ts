@@ -49,6 +49,37 @@ class OrderedMarkWidget extends WidgetType {
   }
 }
 
+class CheckboxWidget extends WidgetType {
+  constructor(
+    private readonly checked: boolean,
+    private readonly markerFrom: number,
+    private readonly markerTo: number,
+  ) {
+    super();
+  }
+
+  eq(other: CheckboxWidget) {
+    return (
+      other.checked === this.checked &&
+      other.markerFrom === this.markerFrom &&
+      other.markerTo === this.markerTo
+    );
+  }
+
+  toDOM() {
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = this.checked;
+    input.className = "cm-md-checkbox";
+    input.setAttribute("aria-label", this.checked ? "Completed" : "Todo");
+    return input;
+  }
+
+  ignoreEvent() {
+    return false;
+  }
+}
+
 const bullet = Decoration.replace({ widget: new BulletWidget(), inclusive: false });
 
 interface PendingDeco {
@@ -137,6 +168,38 @@ function walkChildren(node: SyntaxNode, fn: (child: SyntaxNode) => void) {
   do {
     fn(cursor.node);
   } while (cursor.nextSibling());
+}
+
+function taskMarkerInListItem(listMark: SyntaxNodeRef): SyntaxNode | null {
+  const parent = listMark.node.parent;
+  if (!parent) return null;
+  let marker: SyntaxNode | null = null;
+  walkChildren(parent, (child) => {
+    if (child.name === "TaskMarker") marker = child;
+  });
+  return marker;
+}
+
+function queueCheckbox(
+  pending: PendingDeco[],
+  from: number,
+  to: number,
+  checked: boolean,
+  state: EditorState,
+  lineFrom: number,
+  lineTo: number,
+) {
+  if (from >= to) return;
+  if (headOnLine(state, lineFrom, lineTo)) return;
+  pending.push({
+    from,
+    to,
+    deco: Decoration.replace({
+      widget: new CheckboxWidget(checked, from, to),
+      inclusive: false,
+    }),
+    order: 0,
+  });
 }
 
 function headingContentRange(
@@ -233,6 +296,11 @@ function buildDecorations(view: EditorView): DecorationSet {
 
       case "ListMark": {
         const markText = state.sliceDoc(from, to);
+        const taskMarker = taskMarkerInListItem(node);
+        if (taskMarker) {
+          queueHide(pending, from, taskMarker.from, state, line.from, line.to);
+          return;
+        }
         if (/^\d+\.$/.test(markText)) {
           queueOrderedMark(
             pending,
@@ -246,6 +314,21 @@ function buildDecorations(view: EditorView): DecorationSet {
         } else {
           queueBullet(pending, from, to, state, line.from, line.to);
         }
+        return;
+      }
+
+      case "TaskMarker": {
+        const markText = state.sliceDoc(from, to);
+        const checked = /\[x\]/i.test(markText);
+        queueCheckbox(
+          pending,
+          from,
+          to,
+          checked,
+          state,
+          line.from,
+          line.to,
+        );
         return;
       }
 
@@ -376,6 +459,45 @@ function linkHrefAtPos(view: EditorView, pos: number): string | null {
   });
 
   return href;
+}
+
+export function journalTaskCheckboxExtension() {
+  return EditorView.domEventHandlers({
+    change(event, view) {
+      const target = event.target as HTMLInputElement | null;
+      if (!target?.classList.contains("cm-md-checkbox")) return false;
+
+      const pos = view.posAtDOM(target, 0);
+      if (pos == null) return false;
+
+      ensureSyntaxTree(view.state, view.state.doc.length, 500);
+      let markerFrom = -1;
+      let markerTo = -1;
+
+      syntaxTree(view.state).iterate({
+        from: pos,
+        to: pos,
+        enter(node) {
+          if (node.name === "TaskMarker") {
+            markerFrom = node.from;
+            markerTo = node.to;
+            return false;
+          }
+        },
+      });
+
+      if (markerFrom < 0) return false;
+
+      view.dispatch({
+        changes: {
+          from: markerFrom,
+          to: markerTo,
+          insert: target.checked ? "[x]" : "[ ]",
+        },
+      });
+      return true;
+    },
+  });
 }
 
 export function journalLinkClickExtension(

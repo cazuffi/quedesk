@@ -327,3 +327,10 @@ input[type="checkbox"]:focus-visible {
 .journal-live-editor .cm-md-ordered {
   font-variant-numeric: tabular-nums;
 }
+
+.journal-live-editor .cm-md-checkbox {
+  margin: 0 0.35rem 0 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+  vertical-align: -0.15em;
+}

@@ -72,6 +72,8 @@ class CheckboxWidget extends WidgetType {
     input.checked = this.checked;
     input.className = "cm-md-checkbox";
     input.setAttribute("aria-label", this.checked ? "Completed" : "Todo");
+    input.dataset.markerFrom = String(this.markerFrom);
+    input.dataset.markerTo = String(this.markerTo);
     return input;
   }
 
@@ -175,7 +177,8 @@ function taskMarkerInListItem(listMark: SyntaxNodeRef): SyntaxNode | null {
   if (!parent) return null;
   let marker: SyntaxNode | null = null;
   walkChildren(parent, (child) => {
-    if (child.name === "TaskMarker") marker = child;
+    if (child.name !== "Task") return;
+    marker = child.getChild("TaskMarker");
   });
   return marker;
 }
@@ -463,36 +466,24 @@ function linkHrefAtPos(view: EditorView, pos: number): string | null {
 
 export function journalTaskCheckboxExtension() {
   return EditorView.domEventHandlers({
-    change(event, view) {
+    mousedown(event, view) {
       const target = event.target as HTMLInputElement | null;
       if (!target?.classList.contains("cm-md-checkbox")) return false;
 
-      const pos = view.posAtDOM(target, 0);
-      if (pos == null) return false;
+      event.preventDefault();
 
-      ensureSyntaxTree(view.state, view.state.doc.length, 500);
-      let markerFrom = -1;
-      let markerTo = -1;
+      const markerFrom = Number(target.dataset.markerFrom);
+      const markerTo = Number(target.dataset.markerTo);
+      if (!Number.isFinite(markerFrom) || !Number.isFinite(markerTo)) {
+        return false;
+      }
 
-      syntaxTree(view.state).iterate({
-        from: pos,
-        to: pos,
-        enter(node) {
-          if (node.name === "TaskMarker") {
-            markerFrom = node.from;
-            markerTo = node.to;
-            return false;
-          }
-        },
-      });
-
-      if (markerFrom < 0) return false;
-
+      const nextChecked = !target.checked;
       view.dispatch({
         changes: {
           from: markerFrom,
           to: markerTo,
-          insert: target.checked ? "[x]" : "[ ]",
+          insert: nextChecked ? "[x]" : "[ ]",
         },
       });
       return true;

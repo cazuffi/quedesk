@@ -33,6 +33,7 @@ export function JournalSelectionBar({
           keyboardInset > 0
             ? "0.75rem"
             : "max(0.75rem, env(safe-area-inset-bottom))",
+        pointerEvents: "auto",
       }}
       role="region"
       aria-label="Selection actions"

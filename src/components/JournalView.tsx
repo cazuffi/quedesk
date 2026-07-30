@@ -292,7 +292,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
             ? "app-scroll-y overflow-x-hidden py-3 sm:py-4"
             : [
                 "overflow-hidden py-3 sm:py-4",
-                showMobileSelectionBar ? "pb-28" : "",
+                showMobileSelectionBar ? "pb-36" : "",
               ].join(" "),
         ].join(" ")}
       >

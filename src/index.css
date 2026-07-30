@@ -307,3 +307,9 @@ input[type="checkbox"]:focus-visible {
   border-left: 3px solid var(--color-accent);
   padding-left: 0.5rem;
 }
+
+.journal-live-editor .cm-md-bullet {
+  color: var(--color-text-muted);
+  pointer-events: none;
+  user-select: none;
+}

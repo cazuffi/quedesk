@@ -1,32 +1,53 @@
 import { syntaxTree, ensureSyntaxTree } from "@codemirror/language";
+import type { SyntaxNode, SyntaxNodeRef } from "@lezer/common";
 import {
   Decoration,
   type DecorationSet,
   EditorView,
   ViewPlugin,
   type ViewUpdate,
+  WidgetType,
 } from "@codemirror/view";
 import { RangeSetBuilder, type EditorState } from "@codemirror/state";
 import { parseTaskLink } from "../taskLink";
 
 const hide = Decoration.replace({});
 
+class BulletWidget extends WidgetType {
+  toDOM() {
+    const span = document.createElement("span");
+    span.textContent = "• ";
+    span.className = "cm-md-bullet";
+    span.setAttribute("aria-hidden", "true");
+    return span;
+  }
+
+  ignoreEvent() {
+    return true;
+  }
+}
+
+const bullet = Decoration.replace({ widget: new BulletWidget(), inclusive: false });
+
+interface PendingDeco {
+  from: number;
+  to: number;
+  deco: Decoration;
+  /** Replace widgets before marks at the same position. */
+  order: number;
+}
+
 function headOnLine(state: EditorState, lineFrom: number, lineTo: number): boolean {
   const head = state.selection.main.head;
   return head >= lineFrom && head <= lineTo;
 }
 
-function overlapsSelection(
-  state: EditorState,
-  from: number,
-  to: number,
-): boolean {
-  const { from: selFrom, to: selTo } = state.selection.main;
-  return selFrom < to && selTo > from;
+function lineAtPos(state: EditorState, pos: number) {
+  return state.doc.lineAt(pos);
 }
 
-function addHidden(
-  builder: RangeSetBuilder<Decoration>,
+function queueHide(
+  pending: PendingDeco[],
   from: number,
   to: number,
   state: EditorState,
@@ -35,84 +56,204 @@ function addHidden(
 ) {
   if (from >= to) return;
   if (headOnLine(state, lineFrom, lineTo)) return;
-  builder.add(from, to, hide);
+  pending.push({ from, to, deco: hide, order: 0 });
 }
 
-function addMark(
-  builder: RangeSetBuilder<Decoration>,
+function queueMark(
+  pending: PendingDeco[],
   from: number,
   to: number,
   className: string,
 ) {
   if (from >= to) return;
-  builder.add(from, to, Decoration.mark({ class: className }));
+  pending.push({
+    from,
+    to,
+    deco: Decoration.mark({ class: className }),
+    order: 1,
+  });
+}
+
+function queueBullet(
+  pending: PendingDeco[],
+  from: number,
+  to: number,
+  state: EditorState,
+  lineFrom: number,
+  lineTo: number,
+) {
+  if (from >= to) return;
+  if (headOnLine(state, lineFrom, lineTo)) return;
+  pending.push({ from, to, deco: bullet, order: 0 });
+}
+
+function walkChildren(node: SyntaxNode, fn: (child: SyntaxNode) => void) {
+  const cursor = node.cursor();
+  if (!cursor.firstChild()) return;
+  do {
+    fn(cursor.node);
+  } while (cursor.nextSibling());
+}
+
+function headingContentRange(
+  node: SyntaxNodeRef,
+  state: EditorState,
+): { from: number; to: number } | null {
+  let from = node.from;
+  walkChildren(node.node, (child) => {
+    if (child.name === "HeaderMark") {
+      from = Math.max(from, child.to);
+    }
+  });
+  while (from < node.to && state.sliceDoc(from, from + 1) === " ") {
+    from += 1;
+  }
+  return from < node.to ? { from, to: node.to } : null;
+}
+
+function linkLabelRange(node: SyntaxNodeRef): { from: number; to: number } | null {
+  const marks: { from: number; to: number }[] = [];
+  walkChildren(node.node, (child) => {
+    if (child.name === "LinkMark") {
+      marks.push({ from: child.from, to: child.to });
+    }
+  });
+  if (marks.length < 2) return null;
+  const from = marks[0].to;
+  const to = marks[1].from;
+  return from < to ? { from, to } : null;
+}
+
+function emphasisContentRange(node: SyntaxNodeRef): { from: number; to: number } | null {
+  let from = node.from;
+  let to = node.to;
+  walkChildren(node.node, (child) => {
+    if (child.name === "EmphasisMark") {
+      if (child.from <= from) from = child.to;
+      if (child.to >= to) to = child.from;
+    }
+  });
+  return from < to ? { from, to } : null;
+}
+
+function inlineCodeContentRange(node: SyntaxNodeRef): { from: number; to: number } | null {
+  let from = node.from;
+  let to = node.to;
+  walkChildren(node.node, (child) => {
+    if (child.name === "CodeMark") {
+      if (child.from <= from) from = child.to;
+      if (child.to >= to) to = child.from;
+    }
+  });
+  return from < to ? { from, to } : null;
+}
+
+function finishDecorations(pending: PendingDeco[]): DecorationSet {
+  pending.sort((a, b) => {
+    if (a.from !== b.from) return a.from - b.from;
+    if (a.order !== b.order) return a.order - b.order;
+    return a.to - b.to;
+  });
+
+  const builder = new RangeSetBuilder<Decoration>();
+  let lastTo = -1;
+  for (const item of pending) {
+    if (item.from < lastTo) continue;
+    builder.add(item.from, item.to, item.deco);
+    lastTo = Math.max(lastTo, item.to);
+  }
+  return builder.finish();
 }
 
 function buildDecorations(view: EditorView): DecorationSet {
   const { state } = view;
-  ensureSyntaxTree(state, state.doc.length, 300);
+  ensureSyntaxTree(state, state.doc.length, 500);
   const tree = syntaxTree(state);
-  const builder = new RangeSetBuilder<Decoration>();
+  const pending: PendingDeco[] = [];
 
   tree.cursor().iterate((node) => {
     const { from, to, name } = node;
     if (from === to) return;
 
-    const line = state.doc.lineAt(from);
+    const line = lineAtPos(state, from);
+    const onActiveLine = headOnLine(state, line.from, line.to);
 
     switch (name) {
       case "HeaderMark":
       case "QuoteMark":
-      case "ListMark":
       case "EmphasisMark":
       case "CodeMark":
-      case "LinkMark":
       case "StrikethroughMark":
-        addHidden(builder, from, to, state, line.from, line.to);
+        queueHide(pending, from, to, state, line.from, line.to);
         return;
 
+      case "ListMark":
+        queueBullet(pending, from, to, state, line.from, line.to);
+        return;
+
+      case "LinkMark":
       case "URL":
-      case "LinkTitle": {
-        if (!overlapsSelection(state, from, to)) {
-          addHidden(builder, from, to, state, line.from, line.to);
-        }
+      case "LinkTitle":
+        queueHide(pending, from, to, state, line.from, line.to);
+        return;
+
+      case "ATXHeading1":
+      case "SetextHeading1": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h1");
+        return;
+      }
+      case "ATXHeading2":
+      case "SetextHeading2": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h2");
+        return;
+      }
+      case "ATXHeading3": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h3");
+        return;
+      }
+      case "ATXHeading4": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h4");
+        return;
+      }
+      case "ATXHeading5": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h5");
+        return;
+      }
+      case "ATXHeading6": {
+        const content = headingContentRange(node, state);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-h6");
         return;
       }
 
-      case "ATXHeading1":
-      case "SetextHeading1":
-        addMark(builder, from, to, "cm-md-h1");
+      case "StrongEmphasis": {
+        const content = emphasisContentRange(node);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-strong");
         return;
-      case "ATXHeading2":
-      case "SetextHeading2":
-        addMark(builder, from, to, "cm-md-h2");
+      }
+      case "Emphasis": {
+        const content = emphasisContentRange(node);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-em");
         return;
-      case "ATXHeading3":
-        addMark(builder, from, to, "cm-md-h3");
+      }
+      case "Strikethrough": {
+        const content = emphasisContentRange(node);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-strike");
         return;
-      case "ATXHeading4":
-        addMark(builder, from, to, "cm-md-h4");
+      }
+      case "InlineCode": {
+        const content = inlineCodeContentRange(node);
+        if (content) queueMark(pending, content.from, content.to, "cm-md-code");
         return;
-      case "ATXHeading5":
-        addMark(builder, from, to, "cm-md-h5");
-        return;
-      case "ATXHeading6":
-        addMark(builder, from, to, "cm-md-h6");
-        return;
-
-      case "StrongEmphasis":
-        addMark(builder, from, to, "cm-md-strong");
-        return;
-      case "Emphasis":
-        addMark(builder, from, to, "cm-md-em");
-        return;
-      case "Strikethrough":
-        addMark(builder, from, to, "cm-md-strike");
-        return;
-      case "InlineCode":
-        addMark(builder, from, to, "cm-md-code");
-        return;
+      }
       case "Link": {
+        if (onActiveLine) return;
+        const label = linkLabelRange(node);
+        if (!label) return;
         const urlNode = node.node.getChild("URL");
         const urlText = urlNode
           ? state.sliceDoc(urlNode.from, urlNode.to)
@@ -120,18 +261,18 @@ function buildDecorations(view: EditorView): DecorationSet {
         const className = parseTaskLink(urlText)
           ? "cm-md-task-link"
           : "cm-md-link";
-        addMark(builder, from, to, className);
+        queueMark(pending, label.from, label.to, className);
         return;
       }
       case "Blockquote":
-        addMark(builder, from, to, "cm-md-blockquote");
+        queueMark(pending, from, to, "cm-md-blockquote");
         return;
       default:
         return;
     }
   });
 
-  return builder.finish();
+  return finishDecorations(pending);
 }
 
 export function livePreviewExtension() {
@@ -165,7 +306,7 @@ export function journalLinkClickExtension(
       const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
       if (pos == null) return false;
 
-      ensureSyntaxTree(view.state, view.state.doc.length, 300);
+      ensureSyntaxTree(view.state, view.state.doc.length, 500);
       let href: string | null = null;
 
       syntaxTree(view.state).iterate({

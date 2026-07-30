@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { JournalSearchResults } from "./JournalSearchResults";
+import { JournalSelectionBar } from "./JournalSelectionBar";
 import { MarkdownNotes } from "./MarkdownNotes";
 import { SearchBar } from "./SearchBar";
 import { useTasks } from "../contexts/TasksContext";
+import { useTouchLayout } from "../hooks/useTouchLayout";
 import {
   fetchJournalNote,
   searchJournalNotes,
@@ -27,6 +29,7 @@ interface JournalViewProps {
 
 export function JournalView({ date, onDateChange }: JournalViewProps) {
   const { addTask } = useTasks();
+  const touchLayout = useTouchLayout();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedContentRef = useRef("");
@@ -50,6 +53,10 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
 
   const isToday = date === todayDateString();
   const isSearchActive = searchQuery.trim().length > 0;
+  const showMobileSelectionBar =
+    touchLayout && !isSearchActive && selectedText.length > 0;
+  const showHeaderAddTask =
+    !touchLayout && !isSearchActive && selectedText.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -171,6 +178,11 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
     }
   }, [addTask, creatingTask, date, selectedText, selectionRange]);
 
+  function clearSelection() {
+    setSelectedText("");
+    setSelectionRange(null);
+  }
+
   function goToToday() {
     onDateChange(todayDateString());
   }
@@ -235,7 +247,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
                 Today
               </button>
             ) : null}
-            {!isSearchActive && selectedText ? (
+            {!isSearchActive && showHeaderAddTask ? (
               <button
                 type="button"
                 onClick={() => void handleCreateTask()}
@@ -245,7 +257,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
                 {creatingTask ? "Adding…" : "Add to Inbox"}
               </button>
             ) : null}
-            {taskCreated ? (
+            {!touchLayout && taskCreated ? (
               <span className="text-xs font-medium text-[var(--color-accent)]">
                 Task added
               </span>
@@ -268,7 +280,10 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
           "flex min-h-0 w-full min-w-0 flex-1 flex-col px-4 sm:px-5",
           isSearchActive
             ? "app-scroll-y overflow-x-hidden py-3 sm:py-4"
-            : "overflow-hidden py-3 sm:py-4",
+            : [
+                "overflow-hidden py-3 sm:py-4",
+                showMobileSelectionBar ? "pb-28" : "",
+              ].join(" "),
         ].join(" ")}
       >
         {isSearchActive ? (
@@ -296,6 +311,16 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
           />
         )}
       </div>
+
+      {showMobileSelectionBar ? (
+        <JournalSelectionBar
+          selectedText={selectedText}
+          creating={creatingTask}
+          created={taskCreated}
+          onAdd={() => void handleCreateTask()}
+          onDismiss={clearSelection}
+        />
+      ) : null}
     </div>
   );
 }

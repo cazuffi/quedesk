@@ -114,6 +114,15 @@ function queueHide(
   pending.push({ from, to, deco: hide, order: 0 });
 }
 
+function queueHideAlways(
+  pending: PendingDeco[],
+  from: number,
+  to: number,
+) {
+  if (from >= to) return;
+  pending.push({ from, to, deco: hide, order: 0 });
+}
+
 function queueMark(
   pending: PendingDeco[],
   from: number,
@@ -338,7 +347,9 @@ function buildDecorations(view: EditorView): DecorationSet {
       case "LinkMark":
       case "URL":
       case "LinkTitle":
-        queueHide(pending, from, to, state, line.from, line.to);
+        if (shouldHideLinkSyntax(state, from, line.from, line.to)) {
+          queueHideAlways(pending, from, to);
+        }
         return;
 
       case "ATXHeading1":
@@ -395,16 +406,15 @@ function buildDecorations(view: EditorView): DecorationSet {
         return;
       }
       case "Link": {
-        if (onActiveLine) return;
         const label = linkLabelRange(node);
         if (!label) return;
         const urlNode = node.node.getChild("URL");
         const urlText = urlNode
           ? state.sliceDoc(urlNode.from, urlNode.to)
           : "";
-        const className = parseTaskLink(urlText)
-          ? "cm-md-task-link"
-          : "cm-md-link";
+        const isTaskLink = parseTaskLink(urlText) !== null;
+        if (onActiveLine && !isTaskLink) return;
+        const className = isTaskLink ? "cm-md-task-link" : "cm-md-link";
         queueMark(pending, label.from, label.to, className);
         return;
       }
@@ -442,11 +452,11 @@ export function livePreviewExtension() {
   );
 }
 
-function linkHrefAtPos(view: EditorView, pos: number): string | null {
-  ensureSyntaxTree(view.state, view.state.doc.length, 500);
+function linkHrefAtPos(state: EditorState, pos: number): string | null {
+  ensureSyntaxTree(state, state.doc.length, 500);
   let href: string | null = null;
 
-  syntaxTree(view.state).iterate({
+  syntaxTree(state).iterate({
     from: pos,
     to: pos,
     enter(node) {
@@ -455,13 +465,43 @@ function linkHrefAtPos(view: EditorView, pos: number): string | null {
       if (!label || pos < label.from || pos >= label.to) return;
       const urlNode = node.node.getChild("URL");
       if (urlNode) {
-        href = view.state.sliceDoc(urlNode.from, urlNode.to);
+        href = state.sliceDoc(urlNode.from, urlNode.to);
       }
       return false;
     },
   });
 
   return href;
+}
+
+function isTaskLinkAtPos(state: EditorState, pos: number): boolean {
+  ensureSyntaxTree(state, state.doc.length, 500);
+  let isTask = false;
+
+  syntaxTree(state).iterate({
+    from: pos,
+    to: pos,
+    enter(node) {
+      if (node.name !== "Link") return;
+      const urlNode = node.node.getChild("URL");
+      if (urlNode) {
+        isTask = parseTaskLink(state.sliceDoc(urlNode.from, urlNode.to)) !== null;
+      }
+      return false;
+    },
+  });
+
+  return isTask;
+}
+
+function shouldHideLinkSyntax(
+  state: EditorState,
+  pos: number,
+  lineFrom: number,
+  lineTo: number,
+): boolean {
+  if (!headOnLine(state, lineFrom, lineTo)) return true;
+  return isTaskLinkAtPos(state, pos);
 }
 
 export function journalTaskCheckboxExtension() {
@@ -495,7 +535,7 @@ export function journalLinkClickExtension(
   onLinkClick: (href: string) => void,
 ) {
   return EditorView.domEventHandlers({
-    click(event, view) {
+    mousedown(event, view) {
       const target = event.target as HTMLElement | null;
       const onLinkLabel = target?.closest(".cm-md-link, .cm-md-task-link");
       if (!onLinkLabel) return false;
@@ -503,13 +543,12 @@ export function journalLinkClickExtension(
       const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
       if (pos == null) return false;
 
-      const href = linkHrefAtPos(view, pos);
-      if (href) {
-        event.preventDefault();
-        onLinkClick(href);
-        return true;
-      }
-      return false;
+      const href = linkHrefAtPos(view.state, pos);
+      if (!href) return false;
+
+      event.preventDefault();
+      onLinkClick(href);
+      return true;
     },
   });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { MARKDOWN_TIPS, markdownHelpShortcutLabel } from "../lib/markdownTips";
@@ -7,6 +7,10 @@ interface MarkdownNotesProps {
   value: string;
   onChange: (value: string) => void;
   compact?: boolean;
+  fill?: boolean;
+  placeholder?: string;
+  textareaRef?: RefObject<HTMLTextAreaElement | null>;
+  onSelectionChange?: (selectedText: string) => void;
 }
 
 function MarkdownTipsPanel({ onClose }: { onClose: () => void }) {
@@ -65,18 +69,26 @@ export function MarkdownNotes({
   value,
   onChange,
   compact,
+  fill = false,
+  placeholder,
+  textareaRef,
+  onSelectionChange,
 }: MarkdownNotesProps) {
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [showTips, setShowTips] = useState(false);
   const helpShortcut = markdownHelpShortcutLabel();
 
-  const editorClass = compact
-    ? "min-h-[8rem] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]"
-    : "min-h-[12rem] flex-1 resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]";
+  const editorClass = fill
+    ? "min-h-0 w-full flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]"
+    : compact
+      ? "min-h-[8rem] w-full resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]"
+      : "min-h-[12rem] flex-1 resize-y rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]";
 
-  const previewClass = compact
-    ? "markdown-body min-h-[8rem] overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
-    : "markdown-body min-h-[12rem] flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm";
+  const previewClass = fill
+    ? "markdown-body min-h-0 flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
+    : compact
+      ? "markdown-body min-h-[8rem] overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm"
+      : "markdown-body min-h-[12rem] flex-1 overflow-auto rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm";
 
   function toggleTips() {
     setShowTips((open) => !open);
@@ -89,14 +101,23 @@ export function MarkdownNotes({
     }
   }
 
+  function reportSelection(target: HTMLTextAreaElement) {
+    if (!onSelectionChange) return;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    onSelectionChange(
+      start !== end ? target.value.slice(start, end).trim() : "",
+    );
+  }
+
+  const containerClass = fill
+    ? "relative flex min-h-0 flex-1 flex-col"
+    : compact
+      ? "relative flex flex-col"
+      : "relative flex min-h-0 flex-1 flex-col";
+
   return (
-    <div
-      className={
-        compact
-          ? "relative flex flex-col"
-          : "relative flex min-h-0 flex-1 flex-col"
-      }
-    >
+    <div className={containerClass}>
       <div className="mb-2 flex flex-wrap items-center gap-0.5">
         <button
           type="button"
@@ -145,10 +166,16 @@ export function MarkdownNotes({
 
       {tab === "write" ? (
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleEditorKeyDown}
-          placeholder={`Markdown notes — ${helpShortcut} for tips`}
+          onSelect={(e) => reportSelection(e.currentTarget)}
+          onMouseUp={(e) => reportSelection(e.currentTarget)}
+          onKeyUp={(e) => reportSelection(e.currentTarget)}
+          placeholder={
+            placeholder ?? `Markdown notes — ${helpShortcut} for tips`
+          }
           className={editorClass}
         />
       ) : (

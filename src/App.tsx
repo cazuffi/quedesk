@@ -10,6 +10,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FocusView } from "./components/FocusView";
 import { Header } from "./components/Header";
+import { JournalView } from "./components/JournalView";
 import { QuickCaptureModal } from "./components/QuickCaptureModal";
 import { CaptureSettingsPanel } from "./components/CaptureSettingsPanel";
 import { QueuePanel } from "./components/QueuePanel";
@@ -29,6 +30,7 @@ import {
 import { isDesktop } from "./lib/platform";
 import { useCaptureShortcut } from "./hooks/useCaptureShortcut";
 import { todayDateString } from "./lib/dueDateQueue";
+import { setJournalNavigationHandler } from "./lib/sourceLink";
 import {
   parseTaskDragId,
   QUEUE_TABS,
@@ -60,6 +62,8 @@ function AppContent() {
     selectedTaskId,
     panelLayout,
     focusMode,
+    journalMode,
+    journalDate,
     captureOpen,
     captureSettingsOpen,
     closePanel,
@@ -70,9 +74,11 @@ function AppContent() {
     closeCapture,
     closeCaptureSettings,
     openCaptureSettings,
+    openJournalDate,
+    setJournalDate,
   } = useUi();
 
-  useCaptureShortcut(openCapture, !focusMode);
+  useCaptureShortcut(openCapture, !focusMode && !journalMode);
 
   const isSearchActive = searchQuery.trim().length > 0;
 
@@ -123,6 +129,21 @@ function AppContent() {
       setActiveTab("today");
     }
   }, [focusMode]);
+
+  useEffect(() => {
+    setJournalNavigationHandler((date) => {
+      openJournalDate(date);
+    });
+    return () => setJournalNavigationHandler(null);
+  }, [openJournalDate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const journalParam = params.get("journal");
+    if (journalParam && /^\d{4}-\d{2}-\d{2}$/.test(journalParam)) {
+      openJournalDate(journalParam);
+    }
+  }, [openJournalDate]);
 
   useEffect(() => {
     if (selectedTaskId && !tasks.some((t) => t.id === selectedTaskId)) {
@@ -241,7 +262,7 @@ function AppContent() {
       <div className="app-shell flex h-full min-h-0 flex-col overflow-hidden bg-[var(--color-surface)]">
         {!focusMode ? <Header /> : null}
 
-        {!focusMode && (
+        {!focusMode && !journalMode && (
           <TabBar
             activeTab={activeTab}
             onTabChange={handleTabChange}
@@ -252,6 +273,8 @@ function AppContent() {
         <main className="flex h-full min-h-0 flex-1 overflow-hidden">
           {focusMode ? (
             <FocusView />
+          ) : journalMode ? (
+            <JournalView date={journalDate} onDateChange={setJournalDate} />
           ) : (
             <div className="flex h-full min-h-0 min-w-0 flex-1 overflow-hidden">
               <div className="h-full min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -282,7 +305,9 @@ function AppContent() {
           )}
         </main>
 
-        {!focusMode ? <StatusBar dbReady={dbReady} dbError={dbError} /> : null}
+        {!focusMode && !journalMode ? (
+          <StatusBar dbReady={dbReady} dbError={dbError} />
+        ) : null}
       </div>
 
       {panelLayout === "full" && selectedTask && (

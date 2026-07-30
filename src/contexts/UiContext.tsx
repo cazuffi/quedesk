@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Task } from "../types";
+import { todayDateString } from "../lib/dueDateQueue";
 
 export type PanelLayout = "closed" | "side" | "full";
 
@@ -14,6 +15,8 @@ interface UiContextValue {
   selectedTaskId: string | null;
   panelLayout: PanelLayout;
   focusMode: boolean;
+  journalMode: boolean;
+  journalDate: string;
   hideCompleted: boolean;
   captureOpen: boolean;
   captureSettingsOpen: boolean;
@@ -23,6 +26,10 @@ interface UiContextValue {
   collapsePanel: () => void;
   toggleFocusMode: () => void;
   setFocusMode: (enabled: boolean) => void;
+  toggleJournalMode: () => void;
+  setJournalMode: (enabled: boolean) => void;
+  openJournalDate: (date: string) => void;
+  setJournalDate: (date: string) => void;
   toggleHideCompleted: () => void;
   openCapture: () => void;
   closeCapture: () => void;
@@ -44,6 +51,8 @@ export function UiProvider({
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [panelLayout, setPanelLayout] = useState<PanelLayout>("closed");
   const [focusMode, setFocusMode] = useState(initialFocusMode);
+  const [journalMode, setJournalMode] = useState(false);
+  const [journalDate, setJournalDate] = useState(todayDateString);
   const [hideCompleted, setHideCompleted] = useState(true);
   const [captureOpen, setCaptureOpen] = useState(false);
   const [captureSettingsOpen, setCaptureSettingsOpen] = useState(false);
@@ -79,11 +88,45 @@ export function UiProvider({
   }, []);
 
   const toggleFocusMode = useCallback(() => {
-    setFocusMode((value) => !value);
+    setFocusMode((value) => {
+      const next = !value;
+      if (next) setJournalMode(false);
+      return next;
+    });
   }, []);
 
   const setFocusModeExplicit = useCallback((enabled: boolean) => {
     setFocusMode(enabled);
+    if (enabled) setJournalMode(false);
+  }, []);
+
+  const toggleJournalMode = useCallback(() => {
+    setJournalMode((value) => {
+      const next = !value;
+      if (next) {
+        setFocusMode(false);
+        setSelectedTaskId(null);
+        setPanelLayout("closed");
+      }
+      return next;
+    });
+  }, []);
+
+  const setJournalModeExplicit = useCallback((enabled: boolean) => {
+    setJournalMode(enabled);
+    if (enabled) {
+      setFocusMode(false);
+      setSelectedTaskId(null);
+      setPanelLayout("closed");
+    }
+  }, []);
+
+  const openJournalDate = useCallback((date: string) => {
+    setJournalDate(date);
+    setJournalMode(true);
+    setFocusMode(false);
+    setSelectedTaskId(null);
+    setPanelLayout("closed");
   }, []);
 
   const toggleHideCompleted = useCallback(() => {
@@ -112,6 +155,8 @@ export function UiProvider({
       selectedTaskId,
       panelLayout,
       focusMode,
+      journalMode,
+      journalDate,
       hideCompleted,
       captureOpen,
       captureSettingsOpen,
@@ -121,6 +166,10 @@ export function UiProvider({
       collapsePanel,
       toggleFocusMode,
       setFocusMode: setFocusModeExplicit,
+      toggleJournalMode,
+      setJournalMode: setJournalModeExplicit,
+      openJournalDate,
+      setJournalDate,
       toggleHideCompleted,
       openCapture,
       closeCapture,
@@ -131,6 +180,8 @@ export function UiProvider({
       selectedTaskId,
       panelLayout,
       focusMode,
+      journalMode,
+      journalDate,
       hideCompleted,
       captureOpen,
       captureSettingsOpen,
@@ -140,6 +191,9 @@ export function UiProvider({
       collapsePanel,
       toggleFocusMode,
       setFocusModeExplicit,
+      toggleJournalMode,
+      setJournalModeExplicit,
+      openJournalDate,
       toggleHideCompleted,
       openCapture,
       closeCapture,

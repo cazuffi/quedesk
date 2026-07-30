@@ -14,7 +14,7 @@ import { SearchBar } from "./SearchBar";
 export function Header() {
   const { resolved, toggle } = useTheme();
   const { searchQuery, setSearchQuery } = useTasks();
-  const { focusMode, toggleFocusMode, openCapture } = useUi();
+  const { focusMode, journalMode, toggleFocusMode, toggleJournalMode, openCapture } = useUi();
   const [menuOpen, setMenuOpen] = useState(false);
   const web = isWeb();
 
@@ -41,13 +41,17 @@ export function Header() {
               QueDesk
             </h1>
             <p className="text-[11px] text-[var(--color-text-muted)]">
-              {focusMode ? "Focus mode" : "Personal productivity"}
+              {focusMode
+                ? "Focus mode"
+                : journalMode
+                  ? "Daily journal"
+                  : "Personal productivity"}
             </p>
           </div>
         </div>
 
         <div className="flex flex-1 items-center justify-end gap-2">
-          {!focusMode && (
+          {!focusMode && !journalMode && (
             <div className="min-w-0 flex-1 sm:flex-initial">
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
@@ -55,6 +59,18 @@ export function Header() {
 
           {/* Desktop buttons */}
           <div className="hidden gap-1.5 sm:flex">
+            <button
+              type="button"
+              onClick={toggleJournalMode}
+              className={[
+                "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+                journalMode
+                  ? "bg-[var(--color-accent)] text-white shadow-sm hover:bg-[var(--color-accent-hover)]"
+                  : "bg-[var(--color-surface)] text-[var(--color-text-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-accent)]",
+              ].join(" ")}
+            >
+              {journalMode ? "Exit journal" : "Journal"}
+            </button>
             <button
               type="button"
               onClick={toggleFocusMode}
@@ -67,7 +83,7 @@ export function Header() {
             >
               {focusMode ? "Exit focus" : "Focus"}
             </button>
-            {web && !focusMode ? (
+            {web && !focusMode && !journalMode ? (
               <>
                 <button
                   type="button"
@@ -96,7 +112,7 @@ export function Header() {
             >
               {resolved === "dark" ? "☀ Light" : "☾ Dark"}
             </button>
-            {web && !focusMode ? (
+            {web && !focusMode && !journalMode ? (
               <>
                 <button
                   type="button"
@@ -147,6 +163,16 @@ export function Header() {
                   <button
                     type="button"
                     onClick={() => {
+                      toggleJournalMode();
+                      setMenuOpen(false);
+                    }}
+                    className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
+                  >
+                    {journalMode ? "Exit journal" : "Daily journal"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       toggleFocusMode();
                       setMenuOpen(false);
                     }}
@@ -154,7 +180,7 @@ export function Header() {
                   >
                     {focusMode ? "Exit focus" : "Focus mode"}
                   </button>
-                  {web && !focusMode ? (
+                  {web && !focusMode && !journalMode ? (
                     <>
                       <button
                         type="button"

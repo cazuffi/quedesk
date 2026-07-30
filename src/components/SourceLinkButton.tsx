@@ -1,4 +1,8 @@
 import { openSourceLink } from "../lib/sourceLink";
+import {
+  formatJournalSourceLabel,
+  parseJournalSourceLink,
+} from "../lib/journalLink";
 
 interface SourceLinkButtonProps {
   sourceLink: string;
@@ -12,6 +16,12 @@ export function SourceLinkButton({
   iconOnly = false,
   className = "",
 }: SourceLinkButtonProps) {
+  const journalDate = parseJournalSourceLink(sourceLink);
+  const label = journalDate
+    ? formatJournalSourceLabel(journalDate)
+    : "Source";
+  const title = journalDate ? `Open ${label}` : "Open source";
+
   return (
     <button
       type="button"
@@ -24,11 +34,11 @@ export function SourceLinkButton({
         iconOnly ? "p-0.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
         className,
       ].join(" ")}
-      title="Open source"
-      aria-label="Open source link"
+      title={title}
+      aria-label={title}
     >
       <span aria-hidden>↗</span>
-      {!iconOnly ? <span>Source</span> : null}
+      {!iconOnly ? <span>{label}</span> : null}
     </button>
   );
 }

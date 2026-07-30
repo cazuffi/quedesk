@@ -1,5 +1,14 @@
 import { getDatabase } from "./db";
-import { rowToDailyNote, type DailyNote, type DailyNoteRow } from "../types/journal";
+import {
+  escapeLikePattern,
+  mapNotesToSearchResults,
+} from "./journalSearch";
+import {
+  rowToDailyNote,
+  type DailyNote,
+  type DailyNoteRow,
+  type JournalSearchResult,
+} from "../types/journal";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -37,6 +46,23 @@ export async function upsertJournalNote(
     [id, date, content, updatedAt],
   );
   return { id, date, content, updatedAt };
+}
+
+export async function searchJournalNotes(
+  query: string,
+): Promise<JournalSearchResult[]> {
+  const term = query.trim();
+  if (!term) return [];
+
+  const db = await getDatabase();
+  const rows = await db.select<DailyNoteRow[]>(
+    `SELECT * FROM daily_notes
+     WHERE content LIKE $1 ESCAPE '\\'
+     ORDER BY note_date DESC
+     LIMIT 50`,
+    [`%${escapeLikePattern(term)}%`],
+  );
+  return mapNotesToSearchResults(rows.map(rowToDailyNote), term);
 }
 
 export async function checkJournalHealth(): Promise<boolean> {

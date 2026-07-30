@@ -5,6 +5,12 @@ export interface DailyNote {
   updatedAt: string;
 }
 
+export interface JournalSearchResult {
+  date: string;
+  snippet: string;
+  updatedAt: string;
+}
+
 export interface DailyNoteRow {
   id: string;
   note_date: string;

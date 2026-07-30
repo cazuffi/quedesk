@@ -1,9 +1,14 @@
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }
 
-export function SearchBar({ value, onChange }: SearchBarProps) {
+export function SearchBar({
+  value,
+  onChange,
+  placeholder = "Search tasks…",
+}: SearchBarProps) {
   return (
     <div className="relative w-full sm:max-w-xs">
       <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
@@ -13,7 +18,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search tasks…"
+        placeholder={placeholder}
         className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] py-2 pl-7 pr-7 text-[16px] text-[var(--color-text)] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-accent)] focus:bg-[var(--color-surface-raised)] sm:py-1.5 sm:text-xs"
       />
       {value && (

@@ -1,5 +1,5 @@
 import { isDesktop } from "./platform";
-import type { DailyNote } from "../types/journal";
+import type { DailyNote, JournalSearchResult } from "../types/journal";
 
 type JournalModule = typeof import("./journal") | typeof import("./journal-supabase");
 
@@ -22,6 +22,12 @@ export async function upsertJournalNote(
   content: string,
 ): Promise<DailyNote> {
   return (await getModule()).upsertJournalNote(date, content);
+}
+
+export async function searchJournalNotes(
+  query: string,
+): Promise<JournalSearchResult[]> {
+  return (await getModule()).searchJournalNotes(query);
 }
 
 export async function checkJournalHealth(): Promise<boolean> {

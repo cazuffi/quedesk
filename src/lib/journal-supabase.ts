@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabase";
-import type { DailyNote } from "../types/journal";
+import { mapNotesToSearchResults } from "./journalSearch";
+import type { DailyNote, JournalSearchResult } from "../types/journal";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -56,6 +57,32 @@ export async function upsertJournalNote(
     .single();
   if (error) throw error;
   return rowToDailyNote(data as Record<string, unknown>);
+}
+
+export async function searchJournalNotes(
+  query: string,
+): Promise<JournalSearchResult[]> {
+  const term = query.trim();
+  if (!term) return [];
+
+  const safeTerm = term.replace(/[%_]/g, "");
+  if (!safeTerm) return [];
+
+  const userId = await getUserId();
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("daily_notes")
+    .select("*")
+    .eq("user_id", userId)
+    .ilike("content", `%${safeTerm}%`)
+    .order("note_date", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+
+  const notes = (data ?? []).map((row) =>
+    rowToDailyNote(row as Record<string, unknown>),
+  );
+  return mapNotesToSearchResults(notes, term);
 }
 
 export async function checkJournalHealth(): Promise<boolean> {

@@ -7,6 +7,8 @@ export function journalEditorTheme(): Extension {
       height: "100%",
       fontSize: "14px",
       fontFamily: "var(--font-sans)",
+      color: "var(--color-text)",
+      backgroundColor: "var(--color-surface-raised)",
     },
     ".cm-scroller": {
       overflow: "auto",
@@ -14,12 +16,14 @@ export function journalEditorTheme(): Extension {
       lineHeight: "1.65",
     },
     ".cm-content": {
+      color: "var(--color-text)",
       caretColor: "var(--color-accent)",
       padding: "0.5rem 0.75rem",
       minHeight: "100%",
     },
     ".cm-line": {
       padding: "0 2px",
+      color: "var(--color-text)",
     },
     "&.cm-focused .cm-cursor": {
       borderLeftColor: "var(--color-accent)",

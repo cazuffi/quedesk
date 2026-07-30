@@ -298,31 +298,41 @@ export function livePreviewExtension() {
   );
 }
 
+function linkHrefAtPos(view: EditorView, pos: number): string | null {
+  ensureSyntaxTree(view.state, view.state.doc.length, 500);
+  let href: string | null = null;
+
+  syntaxTree(view.state).iterate({
+    from: pos,
+    to: pos,
+    enter(node) {
+      if (node.name !== "Link") return;
+      const label = linkLabelRange(node);
+      if (!label || pos < label.from || pos >= label.to) return;
+      const urlNode = node.node.getChild("URL");
+      if (urlNode) {
+        href = view.state.sliceDoc(urlNode.from, urlNode.to);
+      }
+      return false;
+    },
+  });
+
+  return href;
+}
+
 export function journalLinkClickExtension(
   onLinkClick: (href: string) => void,
 ) {
   return EditorView.domEventHandlers({
     click(event, view) {
+      const target = event.target as HTMLElement | null;
+      const onLinkLabel = target?.closest(".cm-md-link, .cm-md-task-link");
+      if (!onLinkLabel) return false;
+
       const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
       if (pos == null) return false;
 
-      ensureSyntaxTree(view.state, view.state.doc.length, 500);
-      let href: string | null = null;
-
-      syntaxTree(view.state).iterate({
-        from: pos,
-        to: pos,
-        enter(node) {
-          if (node.name === "Link" && node.from <= pos && node.to >= pos) {
-            const urlNode = node.node.getChild("URL");
-            if (urlNode) {
-              href = view.state.sliceDoc(urlNode.from, urlNode.to);
-            }
-            return false;
-          }
-        },
-      });
-
+      const href = linkHrefAtPos(view, pos);
       if (href) {
         event.preventDefault();
         onLinkClick(href);

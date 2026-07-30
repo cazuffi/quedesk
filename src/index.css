@@ -244,21 +244,28 @@ input[type="checkbox"]:focus-visible {
 }
 
 /* CodeMirror live preview (journal) */
+.journal-live-editor .cm-editor {
+  background: var(--color-surface-raised);
+}
+
 .journal-live-editor .cm-md-h1 {
   font-size: 1.35em;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 .journal-live-editor .cm-md-h2 {
   font-size: 1.2em;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--color-text);
 }
 
 .journal-live-editor .cm-md-h3 {
   font-size: 1.08em;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .journal-live-editor .cm-md-h4,
@@ -266,10 +273,12 @@ input[type="checkbox"]:focus-visible {
 .journal-live-editor .cm-md-h6 {
   font-size: 1em;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .journal-live-editor .cm-md-strong {
   font-weight: 700;
+  color: var(--color-text);
 }
 
 .journal-live-editor .cm-md-em {
@@ -296,6 +305,7 @@ input[type="checkbox"]:focus-visible {
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .journal-live-editor .cm-md-task-link {

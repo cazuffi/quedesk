@@ -8,7 +8,6 @@ import {
   openCapturePopout,
 } from "../lib/captureWindow";
 import { focusAppUrl, openFocusPopout } from "../lib/focusWindow";
-import { WEB_APP_VERSION } from "../lib/appVersion";
 import { SearchBar } from "./SearchBar";
 
 export function Header() {
@@ -32,8 +31,8 @@ export function Header() {
             <h1 className="text-sm font-semibold leading-tight tracking-tight">
               QueDesk
             </h1>
-            <p className="text-[10px] font-medium text-[var(--color-accent)]">
-              {WEB_APP_VERSION}
+            <p className="text-[11px] text-[var(--color-text-muted)]">
+              {journalMode ? "Daily journal" : "Personal productivity"}
             </p>
           </div>
           <div className="hidden sm:block">
@@ -170,49 +169,6 @@ export function Header() {
                   >
                     {journalMode ? "Exit journal" : "Daily journal"}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      toggleFocusMode();
-                      setMenuOpen(false);
-                    }}
-                    className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-                  >
-                    {focusMode ? "Exit focus" : "Focus mode"}
-                  </button>
-                  {web && !focusMode && !journalMode ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openFocusPopout();
-                          setMenuOpen(false);
-                        }}
-                        className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-                      >
-                        Pop out focus
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          openCapture();
-                          setMenuOpen(false);
-                        }}
-                        className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[var(--color-accent)] transition-colors active:bg-[var(--color-surface)]"
-                      >
-                        Capture to Inbox
-                      </button>
-                      <a
-                        href={captureAppUrl()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-[var(--color-text)] transition-colors active:bg-[var(--color-surface)]"
-                        onClick={() => setMenuOpen(false)}
-                      >
-                        Open /capture
-                      </a>
-                    </>
-                  ) : null}
                   <button
                     type="button"
                     onClick={() => {

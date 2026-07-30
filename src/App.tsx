@@ -7,7 +7,7 @@ import {
 } from "@dnd-kit/core";
 import { useTaskDragSensors } from "./hooks/useTaskDragSensors";
 import { arrayMove } from "@dnd-kit/sortable";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FocusView } from "./components/FocusView";
 import { Header } from "./components/Header";
 import { JournalView } from "./components/JournalView";
@@ -30,7 +30,11 @@ import {
 import { isDesktop } from "./lib/platform";
 import { useCaptureShortcut } from "./hooks/useCaptureShortcut";
 import { todayDateString } from "./lib/dueDateQueue";
-import { setJournalNavigationHandler } from "./lib/sourceLink";
+import {
+  setJournalNavigationHandler,
+  setTaskNavigationHandler,
+} from "./lib/sourceLink";
+import { parseTaskLink } from "./lib/taskLink";
 import {
   parseTaskDragId,
   QUEUE_TABS,
@@ -76,6 +80,7 @@ function AppContent() {
     openCaptureSettings,
     openJournalDate,
     setJournalDate,
+    setJournalMode,
   } = useUi();
 
   useCaptureShortcut(openCapture, !focusMode && !journalMode);
@@ -137,13 +142,36 @@ function AppContent() {
     return () => setJournalNavigationHandler(null);
   }, [openJournalDate]);
 
+  const openTaskById = useCallback(
+    (taskId: string) => {
+      setJournalMode(false);
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      const tab = QUEUE_TABS.some((entry) => entry.id === task.queue)
+        ? (task.queue as QueueTab)
+        : "inbox";
+      setActiveTab(tab);
+      selectTask(task);
+    },
+    [tasks, selectTask, setJournalMode],
+  );
+
+  useEffect(() => {
+    setTaskNavigationHandler(openTaskById);
+    return () => setTaskNavigationHandler(null);
+  }, [openTaskById]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const journalParam = params.get("journal");
     if (journalParam && /^\d{4}-\d{2}-\d{2}$/.test(journalParam)) {
       openJournalDate(journalParam);
     }
-  }, [openJournalDate]);
+    const taskParam = params.get("task");
+    if (taskParam && parseTaskLink(`?task=${taskParam}`)) {
+      openTaskById(taskParam);
+    }
+  }, [openJournalDate, openTaskById]);
 
   useEffect(() => {
     if (selectedTaskId && !tasks.some((t) => t.id === selectedTaskId)) {

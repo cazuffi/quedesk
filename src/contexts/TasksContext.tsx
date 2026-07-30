@@ -49,7 +49,7 @@ interface TasksContextValue {
   setSearchQuery: (query: string) => void;
   searchResults: Task[];
   refresh: () => Promise<void>;
-  addTask: (input: CreateTaskInput) => Promise<void>;
+  addTask: (input: CreateTaskInput) => Promise<Task>;
   addSubtask: (parentId: string, title: string) => Promise<void>;
   addSubtasksBatch: (parentId: string, titles: string[]) => Promise<Task[]>;
   editTask: (id: string, input: UpdateTaskInput) => Promise<void>;
@@ -182,9 +182,10 @@ export function TasksProvider({ children }: { children: ReactNode }) {
   );
 
   const addTask = useCallback(
-    async (input: CreateTaskInput) => {
-      await createTask(input);
+    async (input: CreateTaskInput): Promise<Task> => {
+      const task = await createTask(input);
       await refreshAndNotify();
+      return task;
     },
     [refreshAndNotify],
   );

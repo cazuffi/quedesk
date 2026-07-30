@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { markdownPreviewComponents } from "./markdownPreviewComponents";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { MARKDOWN_TIPS, markdownHelpShortcutLabel } from "../lib/markdownTips";
 
@@ -13,7 +14,10 @@ interface MarkdownNotesProps {
   fill?: boolean;
   placeholder?: string;
   textareaRef?: RefObject<HTMLTextAreaElement | null>;
-  onSelectionChange?: (selectedText: string) => void;
+  onSelectionChange?: (
+    selectedText: string,
+    range: { start: number; end: number } | null,
+  ) => void;
 }
 
 function MarkdownTipsPanel({ onClose }: { onClose: () => void }) {
@@ -122,9 +126,11 @@ export function MarkdownNotes({
     if (!onSelectionChange) return;
     const start = target.selectionStart;
     const end = target.selectionEnd;
-    onSelectionChange(
-      start !== end ? target.value.slice(start, end).trim() : "",
-    );
+    if (start !== end) {
+      onSelectionChange(target.value.slice(start, end).trim(), { start, end });
+    } else {
+      onSelectionChange("", null);
+    }
   }
 
   const containerClass = fill
@@ -134,7 +140,12 @@ export function MarkdownNotes({
       : "relative flex min-h-0 flex-1 flex-col";
 
   const previewContent = value.trim() ? (
-    <ReactMarkdown remarkPlugins={[remarkGfm]}>{value}</ReactMarkdown>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={markdownPreviewComponents()}
+    >
+      {value}
+    </ReactMarkdown>
   ) : (
     <p className="text-[var(--color-text-muted)]">Nothing to preview yet.</p>
   );

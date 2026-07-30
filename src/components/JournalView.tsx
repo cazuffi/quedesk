@@ -13,6 +13,10 @@ import {
   formatJournalHeading,
   shiftJournalDate,
 } from "../lib/journalLink";
+import {
+  buildTaskMarkdownLink,
+  replaceTextRange,
+} from "../lib/taskLink";
 import { todayDateString } from "../lib/dueDateQueue";
 import type { JournalSearchResult } from "../types/journal";
 
@@ -34,6 +38,10 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
     "idle",
   );
   const [selectedText, setSelectedText] = useState("");
+  const [selectionRange, setSelectionRange] = useState<{
+    start: number;
+    end: number;
+  } | null>(null);
   const [creatingTask, setCreatingTask] = useState(false);
   const [taskCreated, setTaskCreated] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,6 +57,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
     setLoadError(null);
     setSaveState("idle");
     setSelectedText("");
+    setSelectionRange(null);
     setTaskCreated(false);
 
     fetchJournalNote(date)
@@ -135,20 +144,32 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
 
     setCreatingTask(true);
     try {
-      await addTask({
+      const task = await addTask({
         title,
         queue: "inbox",
         sourceLink: buildJournalSourceLink(date),
       });
+      const taskLink = buildTaskMarkdownLink(title, task.id);
+      if (selectionRange) {
+        setContent((current) =>
+          replaceTextRange(
+            current,
+            selectionRange.start,
+            selectionRange.end,
+            taskLink,
+          ),
+        );
+      }
       setTaskCreated(true);
       setSelectedText("");
+      setSelectionRange(null);
       window.setTimeout(() => setTaskCreated(false), 2500);
     } catch (error) {
       console.error("Failed to create task from journal:", error);
     } finally {
       setCreatingTask(false);
     }
-  }, [addTask, creatingTask, date, selectedText]);
+  }, [addTask, creatingTask, date, selectedText, selectionRange]);
 
   function goToToday() {
     onDateChange(todayDateString());
@@ -267,7 +288,10 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
             value={content}
             onChange={setContent}
             textareaRef={textareaRef}
-            onSelectionChange={setSelectedText}
+            onSelectionChange={(text, range) => {
+              setSelectedText(text);
+              setSelectionRange(range);
+            }}
             placeholder="Write your daily note in Markdown… Select text to create a task linked back here."
           />
         )}

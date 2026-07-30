@@ -318,8 +318,12 @@ input[type="checkbox"]:focus-visible {
   padding-left: 0.5rem;
 }
 
-.journal-live-editor .cm-md-bullet {
+.journal-live-editor .cm-md-list-mark {
   color: var(--color-text-muted);
   pointer-events: none;
   user-select: none;
+}
+
+.journal-live-editor .cm-md-ordered {
+  font-variant-numeric: tabular-nums;
 }

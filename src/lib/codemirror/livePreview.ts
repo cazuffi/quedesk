@@ -17,7 +17,29 @@ class BulletWidget extends WidgetType {
   toDOM() {
     const span = document.createElement("span");
     span.textContent = "• ";
-    span.className = "cm-md-bullet";
+    span.className = "cm-md-list-mark cm-md-bullet";
+    span.setAttribute("aria-hidden", "true");
+    return span;
+  }
+
+  ignoreEvent() {
+    return true;
+  }
+}
+
+class OrderedMarkWidget extends WidgetType {
+  constructor(private readonly label: string) {
+    super();
+  }
+
+  eq(other: OrderedMarkWidget) {
+    return other.label === this.label;
+  }
+
+  toDOM() {
+    const span = document.createElement("span");
+    span.textContent = `${this.label} `;
+    span.className = "cm-md-list-mark cm-md-ordered";
     span.setAttribute("aria-hidden", "true");
     return span;
   }
@@ -85,6 +107,28 @@ function queueBullet(
   if (from >= to) return;
   if (headOnLine(state, lineFrom, lineTo)) return;
   pending.push({ from, to, deco: bullet, order: 0 });
+}
+
+function queueOrderedMark(
+  pending: PendingDeco[],
+  from: number,
+  to: number,
+  label: string,
+  state: EditorState,
+  lineFrom: number,
+  lineTo: number,
+) {
+  if (from >= to) return;
+  if (headOnLine(state, lineFrom, lineTo)) return;
+  pending.push({
+    from,
+    to,
+    deco: Decoration.replace({
+      widget: new OrderedMarkWidget(label),
+      inclusive: false,
+    }),
+    order: 0,
+  });
 }
 
 function walkChildren(node: SyntaxNode, fn: (child: SyntaxNode) => void) {
@@ -187,9 +231,23 @@ function buildDecorations(view: EditorView): DecorationSet {
         queueHide(pending, from, to, state, line.from, line.to);
         return;
 
-      case "ListMark":
-        queueBullet(pending, from, to, state, line.from, line.to);
+      case "ListMark": {
+        const markText = state.sliceDoc(from, to);
+        if (/^\d+\.$/.test(markText)) {
+          queueOrderedMark(
+            pending,
+            from,
+            to,
+            markText,
+            state,
+            line.from,
+            line.to,
+          );
+        } else {
+          queueBullet(pending, from, to, state, line.from, line.to);
+        }
         return;
+      }
 
       case "LinkMark":
       case "URL":

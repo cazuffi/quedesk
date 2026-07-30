@@ -10,8 +10,15 @@ import {
   livePreviewExtension,
 } from "../lib/codemirror/livePreview";
 import { journalEditorTheme } from "../lib/codemirror/journalTheme";
+import { toggleBulletList } from "../lib/codemirror/listCommands";
 import { openMarkdownHref } from "../lib/sourceLink";
-import { markdownHelpShortcutLabel } from "../lib/markdownTips";
+
+function listToggleShortcutLabel(): string {
+  const isMac =
+    typeof navigator !== "undefined" &&
+    /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+  return isMac ? "⌘L" : "Ctrl+L";
+}
 
 interface JournalLiveEditorProps {
   value: string;
@@ -73,7 +80,11 @@ export const JournalLiveEditor = forwardRef<
   const extensions = useMemo(() => {
     const exts: Extension[] = [
       history(),
-      keymap.of([...defaultKeymap, ...historyKeymap]),
+      keymap.of([
+        { key: "Mod-l", run: toggleBulletList },
+        ...defaultKeymap,
+        ...historyKeymap,
+      ]),
       markdown({ base: markdownLanguage, codeLanguages: [] }),
       journalEditorTheme(),
       livePreviewExtension(),
@@ -116,8 +127,8 @@ export const JournalLiveEditor = forwardRef<
         }}
       />
       <p className="shrink-0 border-t border-[var(--color-border)] px-3 py-1.5 text-[10px] text-[var(--color-text-muted)]">
-        Live preview — tap a line to edit markdown. {markdownHelpShortcutLabel()}{" "}
-        for tips in task notes.
+        Live preview — {listToggleShortcutLabel()} toggles bullet list. Tap a line
+        to edit markdown.
       </p>
     </div>
   );

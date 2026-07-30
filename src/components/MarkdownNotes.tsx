@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { markdownPreviewComponents } from "./markdownPreviewComponents";
+import { useTextareaSelection } from "../hooks/useTextareaSelection";
 import { useTouchLayout } from "../hooks/useTouchLayout";
 import { MARKDOWN_TIPS, markdownHelpShortcutLabel } from "../lib/markdownTips";
 
@@ -95,9 +96,26 @@ export function MarkdownNotes({
     fill && !touchLayout ? "split" : "write",
   );
   const [showTips, setShowTips] = useState(false);
+  const [textareaEl, setTextareaEl] = useState<HTMLTextAreaElement | null>(null);
   const helpShortcut = markdownHelpShortcutLabel();
 
+  const mergeTextareaRef = useCallback(
+    (node: HTMLTextAreaElement | null) => {
+      setTextareaEl(node);
+      if (textareaRef) {
+        textareaRef.current = node;
+      }
+    },
+    [textareaRef],
+  );
+
   const showWrite = view === "write" || view === "split";
+
+  useTextareaSelection({
+    textarea: textareaEl,
+    enabled: Boolean(onSelectionChange) && showWrite,
+    onSelectionChange,
+  });
 
   const editorClass = fill
     ? "min-h-0 w-full flex-1 resize-none rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 font-mono text-sm leading-relaxed outline-none transition-colors focus:border-[var(--color-accent)]"
@@ -122,17 +140,6 @@ export function MarkdownNotes({
     }
   }
 
-  function reportSelection(target: HTMLTextAreaElement) {
-    if (!onSelectionChange) return;
-    const start = target.selectionStart;
-    const end = target.selectionEnd;
-    if (start !== end) {
-      onSelectionChange(target.value.slice(start, end).trim(), { start, end });
-    } else {
-      onSelectionChange("", null);
-    }
-  }
-
   const containerClass = fill
     ? "relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
     : compact
@@ -152,13 +159,10 @@ export function MarkdownNotes({
 
   const editorField = (
     <textarea
-      ref={textareaRef}
+      ref={mergeTextareaRef}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={handleEditorKeyDown}
-      onSelect={(e) => reportSelection(e.currentTarget)}
-      onMouseUp={(e) => reportSelection(e.currentTarget)}
-      onKeyUp={(e) => reportSelection(e.currentTarget)}
       placeholder={placeholder ?? `Markdown notes — ${helpShortcut} for tips`}
       className={editorClass}
     />

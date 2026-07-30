@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useVisualViewportBottomInset } from "../hooks/useVisualViewportBottomInset";
 
 interface JournalSelectionBarProps {
@@ -23,19 +24,24 @@ export function JournalSelectionBar({
 }: JournalSelectionBarProps) {
   const keyboardInset = useVisualViewportBottomInset();
 
-  return (
+  const bar = (
     <div
-      className="fixed inset-x-0 z-50 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur-sm"
+      className="fixed inset-x-0 z-[200] border-t border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.18)] backdrop-blur-sm"
       style={{
         bottom: keyboardInset,
-        paddingBottom: keyboardInset > 0 ? "0.75rem" : "max(0.75rem, env(safe-area-inset-bottom))",
+        paddingBottom:
+          keyboardInset > 0
+            ? "0.75rem"
+            : "max(0.75rem, env(safe-area-inset-bottom))",
       }}
       role="region"
       aria-label="Selection actions"
     >
       <p className="mb-2 truncate text-xs text-[var(--color-text-muted)]">
         {created ? (
-          <span className="font-medium text-[var(--color-accent)]">Task added</span>
+          <span className="font-medium text-[var(--color-accent)]">
+            Task added
+          </span>
         ) : (
           <>
             Selected:{" "}
@@ -67,4 +73,6 @@ export function JournalSelectionBar({
       </div>
     </div>
   );
+
+  return createPortal(bar, document.body);
 }

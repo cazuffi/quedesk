@@ -4,7 +4,7 @@ import { JournalSelectionBar } from "./JournalSelectionBar";
 import { MarkdownNotes } from "./MarkdownNotes";
 import { SearchBar } from "./SearchBar";
 import { useTasks } from "../contexts/TasksContext";
-import { useTouchLayout } from "../hooks/useTouchLayout";
+import { usePhoneLayout } from "../hooks/usePhoneLayout";
 import {
   fetchJournalNote,
   searchJournalNotes,
@@ -29,7 +29,7 @@ interface JournalViewProps {
 
 export function JournalView({ date, onDateChange }: JournalViewProps) {
   const { addTask } = useTasks();
-  const touchLayout = useTouchLayout();
+  const phoneLayout = usePhoneLayout();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedContentRef = useRef("");
@@ -54,9 +54,9 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
   const isToday = date === todayDateString();
   const isSearchActive = searchQuery.trim().length > 0;
   const showMobileSelectionBar =
-    touchLayout && !isSearchActive && selectedText.length > 0;
+    phoneLayout && !isSearchActive && selectedText.length > 0;
   const showHeaderAddTask =
-    !touchLayout && !isSearchActive && selectedText.length > 0;
+    !phoneLayout && !isSearchActive && selectedText.length > 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -181,6 +181,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
   function clearSelection() {
     setSelectedText("");
     setSelectionRange(null);
+    textareaRef.current?.setSelectionRange(0, 0);
   }
 
   function goToToday() {
@@ -257,7 +258,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
                 {creatingTask ? "Adding…" : "Add to Inbox"}
               </button>
             ) : null}
-            {!touchLayout && taskCreated ? (
+            {!phoneLayout && taskCreated ? (
               <span className="text-xs font-medium text-[var(--color-accent)]">
                 Task added
               </span>

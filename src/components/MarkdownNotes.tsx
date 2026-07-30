@@ -128,7 +128,7 @@ export function MarkdownNotes({
   }
 
   const containerClass = fill
-    ? "relative flex min-h-0 flex-1 flex-col overflow-hidden"
+    ? "relative flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden"
     : compact
       ? "relative flex flex-col"
       : "relative flex min-h-0 flex-1 flex-col";
@@ -226,7 +226,7 @@ export function MarkdownNotes({
       )}
 
       {fill && view === "split" ? (
-        <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-hidden">
+        <div className="grid min-h-0 w-full min-w-0 flex-1 grid-cols-2 gap-3 overflow-hidden">
           <div className="flex min-h-0 min-w-0 flex-col overflow-hidden">
             <p className="mb-1.5 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
               Markdown
@@ -241,7 +241,7 @@ export function MarkdownNotes({
           </div>
         </div>
       ) : fill ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
           {showWrite ? editorField : previewPane}
         </div>
       ) : view === "preview" ? (

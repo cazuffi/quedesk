@@ -270,7 +270,7 @@ function AppContent() {
           />
         )}
 
-        <main className="flex h-full min-h-0 flex-1 overflow-hidden">
+        <main className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
           {focusMode ? (
             <FocusView />
           ) : journalMode ? (

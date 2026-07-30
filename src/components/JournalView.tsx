@@ -160,7 +160,7 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden">
       <div className="shrink-0 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)] px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1">
@@ -232,18 +232,19 @@ export function JournalView({ date, onDateChange }: JournalViewProps) {
           </div>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 w-full">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Search journal notes…"
+            fullWidth
           />
         </div>
       </div>
 
       <div
         className={[
-          "flex min-h-0 flex-1 flex-col px-4 sm:px-5",
+          "flex min-h-0 w-full min-w-0 flex-1 flex-col px-4 sm:px-5",
           isSearchActive
             ? "app-scroll-y overflow-x-hidden py-3 sm:py-4"
             : "overflow-hidden py-3 sm:py-4",

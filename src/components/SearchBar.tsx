@@ -2,15 +2,22 @@ interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  fullWidth?: boolean;
 }
 
 export function SearchBar({
   value,
   onChange,
   placeholder = "Search tasks…",
+  fullWidth = false,
 }: SearchBarProps) {
   return (
-    <div className="relative w-full sm:max-w-xs">
+    <div
+      className={[
+        "relative w-full",
+        fullWidth ? "" : "sm:max-w-xs",
+      ].join(" ")}
+    >
       <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-muted)]">
         ⌕
       </span>
